@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.Intrinsics.X86;
 using System.Text;
 using System.Threading.Tasks;
+using System.Net.NetworkInformation;
 
 namespace _2021AdventOfCode
 {
@@ -20,7 +21,47 @@ namespace _2021AdventOfCode
         private readonly int sizeOfBoard = 5;
         internal int Quiz2()
         {
-            throw new NotImplementedException();
+            var boards = ParseBoards();
+            var draws = ParseDraws();
+            bool lastBingo = false;
+            int i = 0;
+            var resultCheck = new ConcurrentDictionary<int, bool>();
+            var dictBoards = new ConcurrentDictionary<int, BingoCell[][]>();
+            int lastDrawn = 0;
+            BingoCell[][] lastWinningBoard = null;
+            for (int j = 0; j < boards.Count(); j++)
+            {
+                resultCheck.TryAdd(j, false);
+                dictBoards.TryAdd(j, boards.ElementAt(j));
+            }
+            while (i < draws.Count())
+            {
+
+                Parallel.ForEach(dictBoards, (b) =>
+                {
+                    CheckDraw(draws.ElementAt(i), b.Value);
+                    var a = Bingo(b.Value);
+                    resultCheck.TryUpdate(b.Key, a, false);
+                });
+
+                if(resultCheck.Any(x => x.Value == true))
+                {
+                    lastDrawn = draws.ElementAt(i);
+                    var indexesOfWinningBoards = resultCheck.Where(x => x.Value == true);
+                    foreach (var indexOfWinningBoard in indexesOfWinningBoards)
+                    {
+                        bool tmp = false;
+                        resultCheck.TryRemove(indexOfWinningBoard.Key, out tmp);
+                        dictBoards.TryRemove(indexOfWinningBoard.Key, out lastWinningBoard);
+                    }
+                }
+                i++;
+                
+
+                
+            }
+            var sumOfNotDrawn = SumUnDraw(lastWinningBoard);
+            return lastDrawn * sumOfNotDrawn;
         }
 
         internal int Quiz1()
