@@ -19,9 +19,13 @@ namespace _2021AdventOfCode
             //Console.WriteLine("day 3 quiz 1: {0}", d03.Quiz1());
             //Console.WriteLine("day 3 quiz 2: {0}", d03.Quiz2());
 
-            Day04 d04 = new Day04();
-            Console.WriteLine("day 3 quiz 1: {0}", d04.Quiz1());
-            Console.WriteLine("day 3 quiz 2: {0}", d04.Quiz2());
+            //Day04 d04 = new Day04();
+            //Console.WriteLine("day 4 quiz 1: {0}", d04.Quiz1());
+            //Console.WriteLine("day 4 quiz 2: {0}", d04.Quiz2());
+
+            Day05 d05 = new Day05();
+            Console.WriteLine("day 5 quiz 1: {0}", d05.Quiz1());
+            Console.WriteLine("day 5 quiz 2: {0}", d05.Quiz2());
             Console.ReadKey();
         }
     }
