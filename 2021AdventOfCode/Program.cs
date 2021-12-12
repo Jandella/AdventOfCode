@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace _2021AdventOfCode
 {
@@ -26,6 +28,7 @@ namespace _2021AdventOfCode
             Day05 d05 = new Day05();
             Console.WriteLine("day 5 quiz 1: {0}", d05.Quiz1());
             Console.WriteLine("day 5 quiz 2: {0}", d05.Quiz2());
+            
             Console.ReadKey();
         }
     }

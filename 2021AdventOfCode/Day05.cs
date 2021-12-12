@@ -535,7 +535,7 @@ namespace _2021AdventOfCode
         }
     }
 
-    public class Coordinate
+    public class Coordinate : IEquatable<Coordinate>
     {
         public int X { get; set; }
         public int Y { get; set; }
@@ -552,14 +552,25 @@ namespace _2021AdventOfCode
 
         public override bool Equals(object obj)
         {
-            return obj is Coordinate coordinate &&
-                   X == coordinate.X &&
-                   Y == coordinate.Y;
+            if (obj is Coordinate)
+            {
+                return this.Equals((Coordinate)obj);
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public override int GetHashCode()
         {
             return HashCode.Combine(X, Y);
+        }
+
+        public bool Equals(Coordinate other)
+        {
+            return X == other.X &&
+                   Y == other.Y;
         }
     }
     public class Line
@@ -588,14 +599,14 @@ namespace _2021AdventOfCode
             var rangeY = range(Start.Y, End.Y);
 
             var res = range(Start.X, End.X)
-                .Zip(range(Start.X, End.Y))
+                .Zip(range(Start.Y, End.Y))
                 .Select(x => new Coordinate
                 {
                     X = x.First,
                     Y = x.Second
                 });
 
-            
+
             return res;
         }
     }
