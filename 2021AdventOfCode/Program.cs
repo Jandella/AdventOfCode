@@ -30,16 +30,20 @@ namespace _2021AdventOfCode
             //Day05 d05 = new Day05();
             //Console.WriteLine("day 5 quiz 1: {0}", d05.Quiz1());
             //Console.WriteLine("day 5 quiz 2: {0}", d05.Quiz2());
-            Day06 d06 = new Day06();
-            stopWatch.Restart();
-            var day06quiz1res = d06.Quiz1();
-            stopWatch.Stop();
-            Console.WriteLine("day 6 quiz 1: {0} - elapsed time: {1}", day06quiz1res, stopWatch.Elapsed);
+            //Day06 d06 = new Day06();
+            //stopWatch.Restart();
+            //var day06quiz1res = d06.Quiz1();
+            //stopWatch.Stop();
+            //Console.WriteLine("day 6 quiz 1: {0} - elapsed time: {1}", day06quiz1res, stopWatch.Elapsed);
 
-            stopWatch.Restart();
-            var day06quiz2res = d06.Quiz2();
-            stopWatch.Stop();
-            Console.WriteLine("day 6 quiz 2: {0} - elapsed time: {1}", day06quiz2res, stopWatch.Elapsed);
+            //stopWatch.Restart();
+            //var day06quiz2res = d06.Quiz2();
+            //stopWatch.Stop();
+            //Console.WriteLine("day 6 quiz 2: {0} - elapsed time: {1}", day06quiz2res, stopWatch.Elapsed);
+
+            Day07 d07 = new Day07();
+            Console.WriteLine("day 5 quiz 1: {0}", d07.Quiz1());
+            Console.WriteLine("day 5 quiz 2: {0}", d07.Quiz2());
 
             Console.ReadKey();
         }
