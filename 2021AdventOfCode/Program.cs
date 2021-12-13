@@ -41,9 +41,13 @@ namespace _2021AdventOfCode
             //stopWatch.Stop();
             //Console.WriteLine("day 6 quiz 2: {0} - elapsed time: {1}", day06quiz2res, stopWatch.Elapsed);
 
-            Day07 d07 = new Day07();
-            Console.WriteLine("day 5 quiz 1: {0}", d07.Quiz1());
-            Console.WriteLine("day 5 quiz 2: {0}", d07.Quiz2());
+            //Day07 d07 = new Day07();
+            //Console.WriteLine("day 7 quiz 1: {0}", d07.Quiz1());
+            //Console.WriteLine("day 7 quiz 2: {0}", d07.Quiz2());
+
+            Day08 d08 = new Day08();
+            Console.WriteLine("day 8 quiz 1: {0}", d08.Quiz1());
+            Console.WriteLine("day 8 quiz 2: {0}", d08.Quiz2());
 
             Console.ReadKey();
         }
