@@ -116,9 +116,9 @@ namespace _2021AdventOfCode
 9765678987543257987858999875439876321234569985678998789997655687899889678976542398765679876597899954
 9876789997678349998967899986598765410123679876789219891298766799921998789987843459976789987698998765";
 
-        private int[][] ParseInput()
+        private int[][] ParseInput(string input)
         {
-            var lines = _day9input.Split('\n').Select(x => x.Trim());
+            var lines = input.Split('\n').Select(x => x.Trim());
             var res = new int[lines.Count()][];
             int row = 0;
             foreach (var line in lines)
@@ -136,7 +136,7 @@ namespace _2021AdventOfCode
         }
         public int Quiz1()
         {
-            var map = ParseInput();
+            var map = ParseInput(_day9input);
             var lowestPoints = new List<int>();
             for (int row = 0; row < map.Length; row++)
             {
@@ -155,7 +155,29 @@ namespace _2021AdventOfCode
 
         public int Quiz2()
         {
-            throw new NotImplementedException();
+            var map = ParseInput(_day9input);
+            var lowestPoints = new List<int>();
+            var basinSizes = new List<int>();
+            for (int row = 0; row < map.Length; row++)
+            {
+                for (int col = 0; col < map[row].Length; col++)
+                {
+                    
+                    if (IsLowest(row, col, map))
+                    {
+                        var sum = CountBasinSize(row, col, map);
+                        basinSizes.Add(sum);
+                    }
+
+                }
+            }
+            var biggestThree = basinSizes.OrderByDescending(x => x).Take(3);
+            var m = 1;
+            foreach (var item in biggestThree)
+            {
+                m = m * item;
+            }
+            return m;
         }
 
         public bool IsLowest(int row, int col, int[][] map)
@@ -183,6 +205,50 @@ namespace _2021AdventOfCode
                 nearbyPoints.Add(map[row][right]);
             }
             return nearbyPoints.All(x => x > examnedPoint);
+        }
+
+        public int CountBasinSize(int row, int col, int [][] map)
+        {
+            var queue = new Queue<RowCol>();
+            queue.Enqueue(new RowCol { Row = row, Col = col });
+            var points = new List<RowCol>();
+            while(queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+                if(map[current.Row][current.Col] < 9 && !points.Contains(current))
+                {
+                    points.Add(current);
+                    if (current.Col - 1 >= 0)
+                        queue.Enqueue(new RowCol { Row = current.Row, Col = current.Col - 1 });
+                    if (current.Row - 1 >= 0)
+                        queue.Enqueue(new RowCol { Row = current.Row - 1, Col = current.Col });
+                    if (current.Col + 1 < map.First().Length)
+                        queue.Enqueue(new RowCol { Row = current.Row, Col = current.Col + 1 });
+                    if (current.Row + 1 < map.Length)
+                        queue.Enqueue(new RowCol { Row = current.Row + 1, Col = current.Col });
+                }
+            }
+            
+            return points.Count();
+
+        }
+
+        private class RowCol
+        {
+            public int Row { get; set; }
+            public int Col { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                return obj is RowCol col &&
+                       Row == col.Row &&
+                       Col == col.Col;
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(Row, Col);
+            }
         }
     }
 
