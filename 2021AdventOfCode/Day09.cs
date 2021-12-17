@@ -233,23 +233,7 @@ namespace _2021AdventOfCode
 
         }
 
-        private class RowCol
-        {
-            public int Row { get; set; }
-            public int Col { get; set; }
-
-            public override bool Equals(object obj)
-            {
-                return obj is RowCol col &&
-                       Row == col.Row &&
-                       Col == col.Col;
-            }
-
-            public override int GetHashCode()
-            {
-                return HashCode.Combine(Row, Col);
-            }
-        }
+        
     }
 
     
