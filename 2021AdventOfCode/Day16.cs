@@ -32,10 +32,22 @@ namespace _2021AdventOfCode
 
         public int Quiz1()
         {
-            var a = Decode("D2FE28");
-            throw new NotImplementedException();
-        }
+            var code1 = Decode("8A004A801A8002F478");
+            var sumVersions1 = code1.SumVersions();
+            System.Diagnostics.Debug.Assert(sumVersions1 == 16, $"First test fail ({sumVersions1} != 16)");
+            var code2 = Decode("620080001611562C8802118E34");
+            var sumVersions2 = code2.SumVersions();
+            System.Diagnostics.Debug.Assert(sumVersions2 == 12, $"First test fail ({sumVersions2} != 12)");
+            var code3 = Decode("C0015000016115A2E0802F182340");
+            var sumVersions3 = code3.SumVersions();
+            System.Diagnostics.Debug.Assert(sumVersions3 == 23, $"First test fail ({sumVersions3} != 23)");
+            var code4 = Decode("A0016C880162017C3686B18A3D4780");
+            var sumVersions4 = code4.SumVersions();
+            System.Diagnostics.Debug.Assert(sumVersions4 == 31, $"First test fail ({sumVersions4} != 31)");
 
+            var code = Decode(_day16input);
+            return code.SumVersions();
+        }
 
         public BitArray ToCodedBits(string input)
         {
@@ -56,26 +68,75 @@ namespace _2021AdventOfCode
         private Packet Decode(string input)
         {
             var bits = ToCodedBits(input);
+            var res = DecodePacket(bits, 0, bits.Length);
+            return res.Item2;
+
+        }
+
+        private (int?, Packet) DecodePacket(BitArray array, int start, int end)
+        {
+            if (start >= end)
+                return (default, null);
+            int typeIndex = start + 3;
+            int packetIndex = typeIndex + 3;
+            if (typeIndex >= end)
+                return (default, null);
+            if (packetIndex >= end)
+                return (default, null);
+            
             var res = new Packet();
-            res.Version = GetIntFromBitArray(bits, 0, 3);
-            res.Type = GetIntFromBitArray(bits, 3, 6);
+            res.Version = GetIntFromBitArray(array, start, typeIndex);
+            res.Type = GetIntFromBitArray(array, typeIndex, packetIndex);
+            int index = end;
             if (res.IsOperator)
             {
-                if (bits[6])
+                int subPacketIndex = packetIndex + 1;
+                int subpacketStartIndex;
+                if (array[packetIndex])
                 {
-                    var subpacketLength = GetIntFromBitArray(bits, 7, 7 + 15);
+                    subpacketStartIndex = subPacketIndex + 11;
+                    var numbersOfPackets = GetIntFromBitArray(array, subPacketIndex, subpacketStartIndex);
+                    int bitsIterator = subpacketStartIndex;
+                    for (int i = 0; i < numbersOfPackets; i++)
+                    {
+                        if (bitsIterator >= end)
+                            break;
+
+                        var sub = DecodePacket(array, bitsIterator, end);
+                        if (sub.Item1 != null && sub.Item2 != null)
+                        {
+                            res.Subpackets.Add(sub.Item2);
+                            bitsIterator = sub.Item1.Value;
+                            index = sub.Item1.Value;
+                        }
+                    }
                 }
                 else
                 {
-                    var numbersOfPackets = GetIntFromBitArray(bits, 7, 7 + 11);
+                    subpacketStartIndex = subPacketIndex + 15;
+                    var subpacketLength = GetIntFromBitArray(array, subPacketIndex, subpacketStartIndex);
+                    int? bitsIterator = subpacketStartIndex;
+                    while (bitsIterator != null && bitsIterator < (subpacketStartIndex + subpacketLength))
+                    {
+                        var sub = DecodePacket(array, bitsIterator.Value, end);
+                        if (sub.Item2 != null)
+                        {
+                            res.Subpackets.Add(sub.Item2);
+                            index = sub.Item1.Value;
+                        }
+
+                        bitsIterator = sub.Item1;
+                    }
                 }
             }
             else
             {
-                res.LiteralValue = GetLiteralValue(bits, 6, bits.Length);
+                var decodedLiteralValue = GetLiteralValue(array, packetIndex);
+                res.LiteralValue = decodedLiteralValue.LiteralValue;
+                index = decodedLiteralValue.Index;
             }
-            return res;
 
+            return (index, res);
         }
 
         private int GetIntFromBitArray(BitArray bitArray, int startIndex, int endIndex)
@@ -94,13 +155,15 @@ namespace _2021AdventOfCode
             return value;
         }
 
-        private int GetLiteralValue(BitArray bitArray, int start, int end)
+        private LiteralResult GetLiteralValue(BitArray bitArray, int start)
         {
             int countBits = 0;
             List<BitArray> b = new List<BitArray>();
             BitArray current = new BitArray(4);
             bool isLast = false;
-            for (int i = start; i < end; i++)
+            bool stop = false;
+            int i = start;
+            while(!stop && i < bitArray.Count)
             {
                 if (countBits == 0 && !isLast)
                 {
@@ -120,6 +183,12 @@ namespace _2021AdventOfCode
                 countBits++;
                 if (countBits >= 5 && !isLast)
                     countBits = 0;
+                if(countBits >= 5 && isLast)
+                {
+                    //last read, end while
+                    stop = true;
+                }
+                i++;
             }
             var literal = new BitArray(b.Count * 4);
             int k = 0;
@@ -131,14 +200,28 @@ namespace _2021AdventOfCode
                 }
                 k = k + c.Length;
             }
-            return GetIntFromBitArray(literal, 0, literal.Count);
+            var res = new LiteralResult
+            {
+                LiteralValue = GetIntFromBitArray(literal, 0, literal.Count),
+                Index = i,
+            };
+            return res;
         }
+
+        
         public int Quiz2()
         {
             throw new NotImplementedException();
         }
     }
-
+    public class LiteralResult
+    {
+        public int LiteralValue { get; set; }
+        /// <summary>
+        /// The first empty bit (bit that is not into the literal value bits)
+        /// </summary>
+        public int Index { get; set; }
+    }
     public class Packet
     {
         public int Version { get; set; }
@@ -148,6 +231,19 @@ namespace _2021AdventOfCode
         public int? LiteralValue { get; set; }
 
         public List<Packet> Subpackets { get; set; } = new List<Packet>();
+
+
+        public int SumVersions()
+        {
+            if (Subpackets == null || !Subpackets.Any())
+                return Version;
+            var sum = Version;
+            foreach (var item in Subpackets)
+            {
+                sum += item.SumVersions();
+            }
+            return sum;
+        }
     }
     
 }
