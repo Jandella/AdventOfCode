@@ -37,13 +37,13 @@ namespace _2021AdventOfCode
             System.Diagnostics.Debug.Assert(sumVersions1 == 16, $"First test fail ({sumVersions1} != 16)");
             var code2 = Decode("620080001611562C8802118E34");
             var sumVersions2 = code2.SumVersions();
-            System.Diagnostics.Debug.Assert(sumVersions2 == 12, $"First test fail ({sumVersions2} != 12)");
+            System.Diagnostics.Debug.Assert(sumVersions2 == 12, $"Second test fail ({sumVersions2} != 12)");
             var code3 = Decode("C0015000016115A2E0802F182340");
             var sumVersions3 = code3.SumVersions();
-            System.Diagnostics.Debug.Assert(sumVersions3 == 23, $"First test fail ({sumVersions3} != 23)");
+            System.Diagnostics.Debug.Assert(sumVersions3 == 23, $"Third test fail ({sumVersions3} != 23)");
             var code4 = Decode("A0016C880162017C3686B18A3D4780");
             var sumVersions4 = code4.SumVersions();
-            System.Diagnostics.Debug.Assert(sumVersions4 == 31, $"First test fail ({sumVersions4} != 31)");
+            System.Diagnostics.Debug.Assert(sumVersions4 == 31, $"Fourth test fail ({sumVersions4} != 31)");
 
             var code = Decode(_day16input);
             return code.SumVersions();
@@ -83,10 +83,10 @@ namespace _2021AdventOfCode
                 return (default, null);
             if (packetIndex >= end)
                 return (default, null);
-            
+
             var res = new Packet();
-            res.Version = GetIntFromBitArray(array, start, typeIndex);
-            res.Type = GetIntFromBitArray(array, typeIndex, packetIndex);
+            res.Version = (int)GetUlongFromBitArray(array, start, typeIndex);
+            res.Type = (int)GetUlongFromBitArray(array, typeIndex, packetIndex);
             int index = end;
             if (res.IsOperator)
             {
@@ -95,7 +95,7 @@ namespace _2021AdventOfCode
                 if (array[packetIndex])
                 {
                     subpacketStartIndex = subPacketIndex + 11;
-                    var numbersOfPackets = GetIntFromBitArray(array, subPacketIndex, subpacketStartIndex);
+                    int numbersOfPackets = (int)GetUlongFromBitArray(array, subPacketIndex, subpacketStartIndex);
                     int bitsIterator = subpacketStartIndex;
                     for (int i = 0; i < numbersOfPackets; i++)
                     {
@@ -114,7 +114,7 @@ namespace _2021AdventOfCode
                 else
                 {
                     subpacketStartIndex = subPacketIndex + 15;
-                    var subpacketLength = GetIntFromBitArray(array, subPacketIndex, subpacketStartIndex);
+                    var subpacketLength = (int)GetUlongFromBitArray(array, subPacketIndex, subpacketStartIndex);
                     int? bitsIterator = subpacketStartIndex;
                     while (bitsIterator != null && bitsIterator < (subpacketStartIndex + subpacketLength))
                     {
@@ -139,16 +139,16 @@ namespace _2021AdventOfCode
             return (index, res);
         }
 
-        private int GetIntFromBitArray(BitArray bitArray, int startIndex, int endIndex)
+        private ulong GetUlongFromBitArray(BitArray bitArray, int startIndex, int endIndex)
         {
-            int value = 0;
+            ulong value = 0;
             int size = endIndex - startIndex;
             //MSB
             int shift = size - 1;
             for (int i = 0; i < size; i++)
             {
                 if (bitArray[i + startIndex])
-                    value += 1 << shift;
+                    value += 1UL << shift;
                 shift--;
             }
 
@@ -163,7 +163,7 @@ namespace _2021AdventOfCode
             bool isLast = false;
             bool stop = false;
             int i = start;
-            while(!stop && i < bitArray.Count)
+            while (!stop && i < bitArray.Count)
             {
                 if (countBits == 0 && !isLast)
                 {
@@ -183,7 +183,7 @@ namespace _2021AdventOfCode
                 countBits++;
                 if (countBits >= 5 && !isLast)
                     countBits = 0;
-                if(countBits >= 5 && isLast)
+                if (countBits >= 5 && isLast)
                 {
                     //last read, end while
                     stop = true;
@@ -202,21 +202,51 @@ namespace _2021AdventOfCode
             }
             var res = new LiteralResult
             {
-                LiteralValue = GetIntFromBitArray(literal, 0, literal.Count),
+                LiteralValue = GetUlongFromBitArray(literal, 0, literal.Count),
                 Index = i,
             };
+            
             return res;
         }
 
-        
-        public int Quiz2()
+
+        public ulong Quiz2()
         {
-            throw new NotImplementedException();
+            var code1 = Decode("C200B40A82");
+            var value1 = code1.CalculateValue();
+            System.Diagnostics.Debug.Assert(value1 == 3, $"Test fail ({value1} != 3)");
+            var code2 = Decode("04005AC33890");
+            var value2 = code2.CalculateValue();
+            System.Diagnostics.Debug.Assert(value2 == 54, $"Test fail ({value1} != 54)");
+            var code3 = Decode("880086C3E88112");
+            var value3 = code3.CalculateValue();
+            System.Diagnostics.Debug.Assert(value3 == 7, $"Test fail ({value1} != 7)");
+            
+            var code4 = Decode("CE00C43D881120");
+            var value4 = code4.CalculateValue();
+            System.Diagnostics.Debug.Assert(value4 == 9, $"Test fail ({value1} != 9)");
+
+            var code5 = Decode("D8005AC2A8F0");
+            var value5 = code5.CalculateValue();
+            System.Diagnostics.Debug.Assert(value5 == 1, $"(1)Test fail ({value1} != 1)");
+            var code6 = Decode("F600BC2D8F");
+            var value6 = code6.CalculateValue();
+            System.Diagnostics.Debug.Assert(value6 == 0, $"(2)Test fail ({value1} != 0)");
+            var code7 = Decode("9C005AC2F8F0");
+            var value7 = code7.CalculateValue();
+            System.Diagnostics.Debug.Assert(value7 == 0, $"(3)Test fail ({value1} != 0)");
+            var code8 = Decode("9C0141080250320F1802104A08");
+            var value8 = code8.CalculateValue();
+            System.Diagnostics.Debug.Assert(value8 == 1, $"(4)Test fail ({value1} != 1)");
+
+            var code = Decode(_day16input);
+            var res = code.CalculateValue();
+            return res;
         }
     }
     public class LiteralResult
     {
-        public int LiteralValue { get; set; }
+        public ulong LiteralValue { get; set; }
         /// <summary>
         /// The first empty bit (bit that is not into the literal value bits)
         /// </summary>
@@ -228,7 +258,7 @@ namespace _2021AdventOfCode
         public int Type { get; set; }
 
         public bool IsOperator => Type != 0b100;
-        public int? LiteralValue { get; set; }
+        public ulong? LiteralValue { get; set; }
 
         public List<Packet> Subpackets { get; set; } = new List<Packet>();
 
@@ -244,6 +274,97 @@ namespace _2021AdventOfCode
             }
             return sum;
         }
+
+        public ulong CalculateValue()
+        {
+            
+
+            if (!IsOperator)
+                return LiteralValue ?? 0;
+
+            if (Subpackets == null || !Subpackets.Any())
+                return LiteralValue ?? 0;
+
+            ulong res;
+            switch (Type)
+            {
+                case 0: //Packets with type ID 0 are sum packets
+                    res = 0;
+                    foreach (var item in Subpackets)
+                    {
+                        res += item.CalculateValue();
+                    }
+                    break;
+                case 1: //Packets with type ID 1 are product packets
+                    res = 1;
+                    foreach (var item in Subpackets)
+                    {
+                        res *= item.CalculateValue();
+                    }
+                    break;
+                case 2: //Packets with type ID 2 are minimum packets
+                    var listMinValues = new List<ulong>();
+                    foreach (var item in Subpackets)
+                    {
+                        listMinValues.Add(item.CalculateValue());
+                    }
+                    res = listMinValues.Min();
+                    break;
+                case 3: //Packets with type ID 3 are maximum packets
+                    var listMaxValues = new List<ulong>();
+                    foreach (var item in Subpackets)
+                    {
+                        listMaxValues.Add(item.CalculateValue());
+                    }
+                    res = listMaxValues.Max();
+                    break;
+                case 5: //Packets with type ID 5 are greater than packets
+                    /* their value is 1 if the value of the first sub-packet is greater than the value of the second sub-packet; 
+                     * otherwise, their value is 0. These packets always have exactly two sub-packets.
+                     */
+                    if(Subpackets[0].CalculateValue() > Subpackets[1].CalculateValue())
+                    {
+                        res = 1;
+                    }
+                    else
+                    {
+                        res = 0;
+                    }
+                    break;
+                case 6: // Packets with type ID 6 are less than packets
+                    /*
+                     * their value is 1 if the value of the first sub-packet is less than the value of the second sub-packet; 
+                     * otherwise, their value is 0. These packets always have exactly two sub-packets.
+                     */
+                    if (Subpackets[0].CalculateValue() < Subpackets[1].CalculateValue())
+                    {
+                        res = 1;
+                    }
+                    else
+                    {
+                        res = 0;
+                    }
+                    break;
+                case 7: //Packets with type ID 7 are equal to packets
+                    /*
+                     * their value is 1 if the value of the first sub-packet is equal to the value of the second sub-packet; 
+                     * otherwise, their value is 0. These packets always have exactly two sub-packets.
+                     */
+                    if (Subpackets[0].CalculateValue() == Subpackets[1].CalculateValue())
+                    {
+                        res = 1;
+                    }
+                    else
+                    {
+                        res = 0;
+                    }
+                    break;
+                default:
+                    res = LiteralValue ?? 0;
+                    break;
+            }
+            return res;
+        }
     }
-    
+
 }
