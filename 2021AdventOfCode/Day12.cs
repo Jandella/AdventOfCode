@@ -12,30 +12,11 @@ namespace _2021AdventOfCode
     /// </summary>
     public class Day12
     {
-        private string _day12input = @"yw-MN
-wn-XB
-DG-dc
-MN-wn
-yw-DG
-start-dc
-start-ah
-MN-start
-fi-yw
-XB-fi
-wn-ah
-MN-ah
-MN-dc
-end-yw
-fi-end
-th-fi
-end-XB
-dc-XB
-yw-XN
-wn-yw
-dc-ah
-MN-fi
-wn-DG";
-
+        private string _day12input = "";
+        public Day12()
+        {
+            _day12input = System.IO.File.ReadAllText(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Inputs", "Day12Input.txt"));
+        }
         public int Quiz1()
         {
             var graph = new Graph(_day12input);

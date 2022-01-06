@@ -15,7 +15,11 @@ namespace _2021AdventOfCode
     /// </summary>
     public class Day17
     {
-        private string _day17input = @"target area: x=102..157, y=-146..-90";
+        private string _day17input = "";
+        public Day17()
+        {
+            _day17input = System.IO.File.ReadAllText(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Inputs", "Day17Input.txt"));
+        }
         public int Quiz1()
         {
             var area = new TargetArea(_day17input);

@@ -13,16 +13,11 @@ namespace _2021AdventOfCode
     /// </summary>
     public class Day11
     {
-        private string _day11input = @"6744638455
-3135745418
-4754123271
-4224257161
-8167186546
-2268577674
-7177768175
-2662255275
-4655343376
-7852526168";
+        private string _day11input = "";
+        public Day11()
+        {
+            _day11input = System.IO.File.ReadAllText(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Inputs", "Day11Input.txt"));
+        }
         private int[,] ParseInput(string input)
         {
             var lines = input.Split("\n").Select(x => x.Trim());
