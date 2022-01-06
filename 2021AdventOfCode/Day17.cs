@@ -26,12 +26,12 @@ namespace _2021AdventOfCode
 
         public int Quiz2()
         {
-            var area = new TargetArea("target area: x=20..30, y=-10..-5");
+            var area = new TargetArea(_day17input);
             var yMax = Math.Max(Math.Abs(area.Ymax), Math.Abs(area.Ymin));
             int distances = 0;
-            for (int x = 0; x < area.Xmax; x++)
+            for (int x = 0; x <= area.Xmax; x++)
             {
-                for (int y = -yMax; y < yMax; y++)
+                for (int y = -yMax; y <= yMax; y++)
                 {
                     var testProbeLaunch = new ProbeLaunch(x, y);
                     if (testProbeLaunch.HitsTarget(area))
