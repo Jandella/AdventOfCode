@@ -82,7 +82,7 @@ namespace _2021AdventOfCode
             Debug.Assert(n4.Explode());
             Debug.Assert("[[3,[2,[8,0]]],[9,[5,[7,0]]]]" == n4.ToString());
             Debug.Assert(!n4.Explode());
-            
+
         }
         private void TestSplit()
         {
@@ -99,6 +99,10 @@ namespace _2021AdventOfCode
             var n5 = new SnailNumber("[[[[[1,1],[2,2]],[3,3]],[4,4]],[5,5]]");
             n5.Reduce();
             Debug.Assert("[[[[3,0],[5,3]],[4,4]],[5,5]]" == n5.ToString());
+
+            var n6 = new SnailNumber("[[[[0,[4,5]],[0,0]],[[[4,5],[2,6]],[9,5]]],[7,[[[3,7],[4,3]],[[6,3],[8,8]]]]]");
+            n6.Reduce();
+            Debug.Assert("[[[[4,0],[5,4]],[[7,7],[6,0]]],[[8,[7,7]],[[7,9],[5,0]]]]" == n6.ToString());
         }
         private void TestSums()
         {
@@ -115,28 +119,36 @@ namespace _2021AdventOfCode
 [5,5]";
             TestSum(test, "[[[[3,0],[5,3]],[4,4]],[5,5]]");
 
-            test = @"[[[0,[4,5]],[0,0]],[[[4,5],[2,6]],[9,5]]]
-[7,[[[3,7],[4,3]],[[6,3],[8,8]]]]
-[[2,[[0,8],[3,4]]],[[[6,7],1],[7,[1,6]]]]
-[[[[2,4],7],[6,[0,5]]],[[[6,8],[2,8]],[[2,1],[4,5]]]]
-[7,[5,[[3,8],[1,4]]]]
-[[2,[2,2]],[8,[8,1]]]
-[2,9]
-[1,[[[9,3],9],[[9,0],[0,7]]]]
-[[[5,[7,4]],7],1]
-[[[[4,2],2],6],[8,7]]";
-            var addends = ParseInput(test);
-            SnailNumber sum = addends.First();
-            for (int i = 1; i < addends.Length; i++)
-            {
-                sum = sum + addends[i];
-                if (i == 1)
-                {
-                    Debug.Assert("[[[[4,0],[5,4]],[[7,7],[6,0]]],[[8,[7,7]],[[7,9],[5,0]]]]" == sum.ToString());
-                }
-            }
-            Debug.Assert("[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]" == sum.ToString());
-            
+
+            TestSum(@"[[[0,[4,5]],[0,0]],[[[4,5],[2,6]],[9,5]]]
+[7,[[[3,7],[4,3]],[[6,3],[8,8]]]]", "[[[[4,0],[5,4]],[[7,7],[6,0]]],[[8,[7,7]],[[7,9],[5,0]]]]");
+
+            TestSum(@"[[[[4,0],[5,4]],[[7,7],[6,0]]],[[8,[7,7]],[[7,9],[5,0]]]]
+[[2,[[0,8],[3,4]]],[[[6,7],1],[7,[1,6]]]]", "[[[[6,7],[6,7]],[[7,7],[0,7]]],[[[8,7],[7,7]],[[8,8],[8,0]]]]");
+
+            TestSum(@"[[[[6,7],[6,7]],[[7,7],[0,7]]],[[[8,7],[7,7]],[[8,8],[8,0]]]]
+[[[[2,4],7],[6,[0,5]]],[[[6,8],[2,8]],[[2,1],[4,5]]]]", "[[[[7,0],[7,7]],[[7,7],[7,8]]],[[[7,7],[8,8]],[[7,7],[8,7]]]]");
+
+            TestSum(@"[[[[7,0],[7,7]],[[7,7],[7,8]]],[[[7,7],[8,8]],[[7,7],[8,7]]]]
+[7,[5,[[3,8],[1,4]]]]", "[[[[7,7],[7,8]],[[9,5],[8,7]]],[[[6,8],[0,8]],[[9,9],[9,0]]]]");
+
+            TestSum(@"[[[[7,7],[7,8]],[[9,5],[8,7]]],[[[6,8],[0,8]],[[9,9],[9,0]]]]
+[[2,[2,2]],[8,[8,1]]]", "[[[[6,6],[6,6]],[[6,0],[6,7]]],[[[7,7],[8,9]],[8,[8,1]]]]");
+
+            TestSum(@"[[[[6,6],[6,6]],[[6,0],[6,7]]],[[[7,7],[8,9]],[8,[8,1]]]]
+[2,9]", "[[[[6,6],[7,7]],[[0,7],[7,7]]],[[[5,5],[5,6]],9]]");
+
+            TestSum(@"[[[[6,6],[7,7]],[[0,7],[7,7]]],[[[5,5],[5,6]],9]]
+[1,[[[9,3],9],[[9,0],[0,7]]]]", "[[[[7,8],[6,7]],[[6,8],[0,8]]],[[[7,7],[5,0]],[[5,5],[5,6]]]]");
+
+            TestSum(@"[[[[7,8],[6,7]],[[6,8],[0,8]]],[[[7,7],[5,0]],[[5,5],[5,6]]]]
+[[[5,[7,4]],7],1]", "[[[[7,7],[7,7]],[[8,7],[8,7]]],[[[7,0],[7,7]],9]]");
+
+            TestSum(@"[[[[7,7],[7,7]],[[8,7],[8,7]]],[[[7,0],[7,7]],9]]
+[[[[4,2],2],6],[8,7]]", "[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]");
+
+
+
 
             test = @"[[[0,[5,8]],[[1,7],[9,6]]],[[4,[1,2]],[[1,4],2]]]
 [[[5,[2,8]],4],[5,[[9,9],0]]]
@@ -148,19 +160,20 @@ namespace _2021AdventOfCode
 [[9,3],[[9,9],[6,[4,9]]]]
 [[2,[[7,7],7]],[[5,8],[[9,3],[0,2]]]]
 [[[[5,2],5],[8,[3,7]]],[[5,[7,5]],[4,4]]]";
-            sum = TestSum(test, "[[[[6,6],[7,6]],[[7,7],[7,0]]],[[[7,7],[7,7]],[[7,8],[9,9]]]]");
+            var sum = TestSum(test, "[[[[6,6],[7,6]],[[7,7],[7,0]]],[[[7,7],[7,7]],[[7,8],[9,9]]]]");
             Debug.Assert(4140 == sum.CalculateMagnitude());
 
         }
 
 
         private SnailNumber TestSum(string input, string expected)
-{
+        {
             var addends = ParseInput(input);
             SnailNumber sum = addends.First();
             for (int i = 1; i < addends.Length; i++)
             {
                 sum = sum + addends[i];
+                sum.Reduce();
             }
             Debug.Assert(expected == sum.ToString());
             return sum;
@@ -174,16 +187,37 @@ namespace _2021AdventOfCode
         }
         public int Quiz1()
         {
-            throw new NotImplementedException();
+            var addends = ParseInput(_day18input);
+            SnailNumber sum = addends.First();
+            for (int i = 1; i < addends.Length; i++)
+            {
+                sum = sum + addends[i];
+                sum.Reduce();
+            }
+            return sum.CalculateMagnitude();
         }
 
-        public int Quiz2()
+        public long Quiz2()
         {
-            throw new NotImplementedException();
+            var addends = ParseInput(_day18input);
+            long maxVal = 0;
+            for (int i = 0; i < addends.Length; i++)
+            {
+                for (int j = 0; j < addends.Length; j++)
+                {
+                    if (i == j) break;
+                    var sum = addends[i] + addends[j];
+                    sum.Reduce();
+                    long val = sum.CalculateMagnitude();
+                    if (val > maxVal)
+                        maxVal = val;
+                }
+            }
+            return maxVal;
         }
     }
 
-    
+
     public class SnailNumber
     {
         public int? _value = null;
@@ -204,6 +238,8 @@ namespace _2021AdventOfCode
         {
             _parent = p;
             _value = value;
+            _left = null;
+            _right = null;
         }
 
         public SnailNumber(string number)
@@ -253,27 +289,27 @@ namespace _2021AdventOfCode
                 }
                 else if (int.TryParse(currentChar.ToString(), out int x) && nextChar == ',')
                 {
-                    current._left = new SnailNumber(null, x);
+                    current._left = new SnailNumber(current, x);
                 }
                 else if (currentChar == ',' && int.TryParse(nextChar.ToString(), out int y))
                 {
-                    current._right = new SnailNumber(null, y);
+                    current._right = new SnailNumber(current, y);
                 }
             }
             return current;
         }
         public bool IsLeaf => _value != null;
-        public SnailNumber Sum(SnailNumber n)
-        {
-            var res = new SnailNumber(null, this, n);
-            _parent = res;
-            n._parent = res;
-            res.Reduce();
-            return res;
-        }
+
         public static SnailNumber operator +(SnailNumber a, SnailNumber b)
         {
-            return a.Sum(b);
+            var res = new SnailNumber(null, a, b);
+            a._parent = res;
+            b._parent = res;
+            //HACK! I don't know why, if I reduce res I obtain the wrong number
+            // but if I do toString and then reduce => I have the right number 
+            var number = res.ToString();
+            res = new SnailNumber(number);
+            return res;
         }
         public void Reduce()
         {
@@ -300,15 +336,14 @@ namespace _2021AdventOfCode
              * pair (if any). Exploding pairs will always consist of two regular numbers.
              * Then, the entire exploding pair is replaced with the regular number 0.
              */
-            return ExplodeInt(0);
+            return ExplodeInternal(0);
         }
 
-        private bool ExplodeInt(int depth)
+        private bool ExplodeInternal(int depth)
         {
             var result = false;
             if (IsLeaf)
                 result = false;
-
 
             if (depth == 3)
             {
@@ -321,7 +356,7 @@ namespace _2021AdventOfCode
                     if (rightRegularNumber != null)
                         rightRegularNumber._value += _left._right._value;
                     _left = new SnailNumber(this, 0);
-                    return true;
+                    result = true;
                 }
                 if (_right != null && !_right.IsLeaf)
                 {
@@ -332,16 +367,16 @@ namespace _2021AdventOfCode
                     if (rightRegularNumber != null)
                         rightRegularNumber._value += _right._right._value;
                     _right = new SnailNumber(this, 0);
-                    return true;
+                    result = true;
                 }
-                return false;
+                return result;
             }
 
-            if (_left != null)
-                result = _left.ExplodeInt(depth + 1);
+            if (!result && _left != null)
+                result = _left.ExplodeInternal(depth + 1);
 
             if (!result && _right != null)
-                result = _right.ExplodeInt(depth + 1);
+                result = _right.ExplodeInternal(depth + 1);
 
             return result;
         }
@@ -453,5 +488,7 @@ namespace _2021AdventOfCode
                 return sb.ToString();
             }
         }
+
+
     }
 }
