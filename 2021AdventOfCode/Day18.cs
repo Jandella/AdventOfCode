@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace _2021AdventOfCode
 {
@@ -24,6 +25,10 @@ namespace _2021AdventOfCode
         {
             TestParse();
             TestMagnitude();
+            TestExplode();
+            TestSplit();
+            TestReduce();
+            TestSums();
         }
 
         private void TestParse()
@@ -42,6 +47,7 @@ namespace _2021AdventOfCode
             Debug.Assert("[[[9,[3,8]],[[0,9],6]],[[[3,7],[4,9]],3]]" == n6.ToString());
             var n7 = new SnailNumber("[[[[1,3],[5,3]],[[1,3],[8,7]]],[[[4,9],[6,9]],[[8,2],[7,3]]]]");
             Debug.Assert("[[[[1,3],[5,3]],[[1,3],[8,7]]],[[[4,9],[6,9]],[[8,2],[7,3]]]]" == n7.ToString());
+
         }
         private void TestMagnitude()
         {
@@ -58,7 +64,114 @@ namespace _2021AdventOfCode
             var n6 = new SnailNumber("[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]");
             Debug.Assert(3488 == n6.CalculateMagnitude());
         }
+        private void TestExplode()
+        {
+            var n1 = new SnailNumber("[[[[[9,8],1],2],3],4]");
+            Debug.Assert(n1.Explode());
+            Debug.Assert("[[[[0,9],2],3],4]" == n1.ToString());
+            Debug.Assert(!n1.Explode());
+            var n2 = new SnailNumber(" [7,[6,[5,[4,[3,2]]]]]");
+            Debug.Assert(n2.Explode());
+            Debug.Assert("[7,[6,[5,[7,0]]]]" == n2.ToString());
+            var n3 = new SnailNumber("[[6,[5,[4,[3,2]]]],1]");
+            Debug.Assert(n3.Explode());
+            Debug.Assert("[[6,[5,[7,0]]],3]" == n3.ToString());
+            var n4 = new SnailNumber("[[3,[2,[1,[7,3]]]],[6,[5,[4,[3,2]]]]]");
+            Debug.Assert(n4.Explode());
+            Debug.Assert("[[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]" == n4.ToString());
+            Debug.Assert(n4.Explode());
+            Debug.Assert("[[3,[2,[8,0]]],[9,[5,[7,0]]]]" == n4.ToString());
+            Debug.Assert(!n4.Explode());
+            
+        }
+        private void TestSplit()
+        {
+            var n1 = new SnailNumber("[[[[[4,3],4],4],[7,[[8,4],9]]],[1,1]]");
+            while (n1.Explode()) ;
+            Debug.Assert(n1.Split());
+            Debug.Assert("[[[[0,7],4],[[7,8],[0,13]]],[1,1]]" == n1.ToString());
+            Debug.Assert(n1.Split());
+            Debug.Assert("[[[[0,7],4],[[7,8],[0,[6,7]]]],[1,1]]" == n1.ToString());
+            Debug.Assert(!n1.Split());
+        }
+        private void TestReduce()
+        {
+            var n5 = new SnailNumber("[[[[[1,1],[2,2]],[3,3]],[4,4]],[5,5]]");
+            n5.Reduce();
+            Debug.Assert("[[[[3,0],[5,3]],[4,4]],[5,5]]" == n5.ToString());
+        }
+        private void TestSums()
+        {
+            var test = @"[1,1]
+[2,2]
+[3,3]
+[4,4]";
+            TestSum(test, "[[[[1,1],[2,2]],[3,3]],[4,4]]");
 
+            test = @"[1,1]
+[2,2]
+[3,3]
+[4,4]
+[5,5]";
+            TestSum(test, "[[[[3,0],[5,3]],[4,4]],[5,5]]");
+
+            test = @"[[[0,[4,5]],[0,0]],[[[4,5],[2,6]],[9,5]]]
+[7,[[[3,7],[4,3]],[[6,3],[8,8]]]]
+[[2,[[0,8],[3,4]]],[[[6,7],1],[7,[1,6]]]]
+[[[[2,4],7],[6,[0,5]]],[[[6,8],[2,8]],[[2,1],[4,5]]]]
+[7,[5,[[3,8],[1,4]]]]
+[[2,[2,2]],[8,[8,1]]]
+[2,9]
+[1,[[[9,3],9],[[9,0],[0,7]]]]
+[[[5,[7,4]],7],1]
+[[[[4,2],2],6],[8,7]]";
+            var addends = ParseInput(test);
+            SnailNumber sum = addends.First();
+            for (int i = 1; i < addends.Length; i++)
+            {
+                sum = sum + addends[i];
+                if (i == 1)
+                {
+                    Debug.Assert("[[[[4,0],[5,4]],[[7,7],[6,0]]],[[8,[7,7]],[[7,9],[5,0]]]]" == sum.ToString());
+                }
+            }
+            Debug.Assert("[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]" == sum.ToString());
+            
+
+            test = @"[[[0,[5,8]],[[1,7],[9,6]]],[[4,[1,2]],[[1,4],2]]]
+[[[5,[2,8]],4],[5,[[9,9],0]]]
+[6,[[[6,2],[5,6]],[[7,6],[4,7]]]]
+[[[6,[0,7]],[0,9]],[4,[9,[9,0]]]]
+[[[7,[6,4]],[3,[1,3]]],[[[5,5],1],9]]
+[[6,[[7,3],[3,2]]],[[[3,8],[5,7]],4]]
+[[[[5,4],[7,7]],8],[[8,3],8]]
+[[9,3],[[9,9],[6,[4,9]]]]
+[[2,[[7,7],7]],[[5,8],[[9,3],[0,2]]]]
+[[[[5,2],5],[8,[3,7]]],[[5,[7,5]],[4,4]]]";
+            sum = TestSum(test, "[[[[6,6],[7,6]],[[7,7],[7,0]]],[[[7,7],[7,7]],[[7,8],[9,9]]]]");
+            Debug.Assert(4140 == sum.CalculateMagnitude());
+
+        }
+
+
+        private SnailNumber TestSum(string input, string expected)
+{
+            var addends = ParseInput(input);
+            SnailNumber sum = addends.First();
+            for (int i = 1; i < addends.Length; i++)
+            {
+                sum = sum + addends[i];
+            }
+            Debug.Assert(expected == sum.ToString());
+            return sum;
+        }
+        private SnailNumber[] ParseInput(string input)
+        {
+            return input.Split("\n")
+                .Select(x => x.Trim())
+                .Select(x => new SnailNumber(x))
+                .ToArray();
+        }
         public int Quiz1()
         {
             throw new NotImplementedException();
@@ -70,41 +183,35 @@ namespace _2021AdventOfCode
         }
     }
 
-
+    
     public class SnailNumber
     {
-        private bool _isLiteral;
-        private int _literal;
-        private SnailNumber[] _values = new SnailNumber[0];
+        public int? _value = null;
+        public SnailNumber _parent = null;
+        public SnailNumber _left = null;
+        public SnailNumber _right = null;
+        private SnailNumber()
+        {
 
-        public SnailNumber()
-        {
-            _values = new SnailNumber[] { null, null };
-            _isLiteral = false;
         }
-        private SnailNumber(int x)
+        public SnailNumber(SnailNumber parent, SnailNumber left, SnailNumber right)
         {
-            _isLiteral = true;
-            _literal = x;
+            _parent = parent;
+            _left = left;
+            _right = right;
         }
-        public SnailNumber(int x, int y)
+        public SnailNumber(SnailNumber p, int value)
         {
-            _isLiteral = false;
-            _values = new SnailNumber[] { new SnailNumber(x), new SnailNumber(y) };
-        }
-        public SnailNumber(SnailNumber x, SnailNumber y)
-        {
-            _isLiteral = false;
-            _values = new SnailNumber[] { x, y };
+            _parent = p;
+            _value = value;
         }
 
         public SnailNumber(string number)
         {
-            _isLiteral = false;
-            _values = new SnailNumber[] { null, null };
-            var tmp = Parse(number);
-            _values[0] = tmp._values[0];
-            _values[1] = tmp._values[1];
+            var n = Parse(number);
+            _parent = null;
+            _left = n._left;
+            _right = n._right;
         }
         private static SnailNumber Parse(string number)
         {
@@ -114,11 +221,12 @@ namespace _2021AdventOfCode
             {
                 var currentChar = number.ElementAt(i);
                 var nextChar = char.MinValue;
-                if(i < number.Length - 1)
+                if (i < number.Length - 1)
                     nextChar = number.ElementAt(i + 1);
-                if(currentChar == '[')
+                if (currentChar == '[')
                 {
                     var newNode = new SnailNumber();
+                    newNode._parent = current;
                     current = newNode;
                     pairStack.Push(current);
                 }
@@ -132,105 +240,216 @@ namespace _2021AdventOfCode
                     }
 
                     current = pairStack.Peek();
-                    if (!current._isLiteral && current._values[0] == null)
+                    if (!current.IsLeaf && current._left == null)
                     {
-                        current._values[0] = childNode;
+                        current._left = childNode;
+                        childNode._parent = current;
                     }
-                    else if (!current._isLiteral && current._values[1] == null)
+                    else if (!current.IsLeaf && current._right == null)
                     {
-                        current._values[1] = childNode;
+                        current._right = childNode;
+                        childNode._parent = current;
                     }
                 }
                 else if (int.TryParse(currentChar.ToString(), out int x) && nextChar == ',')
                 {
-                    current._values[0] = new SnailNumber(x);
+                    current._left = new SnailNumber(null, x);
                 }
-                else if(currentChar == ',' && int.TryParse(nextChar.ToString(), out int y))
+                else if (currentChar == ',' && int.TryParse(nextChar.ToString(), out int y))
                 {
-                    current._values[1] = new SnailNumber(y);
+                    current._right = new SnailNumber(null, y);
                 }
             }
             return current;
         }
-
+        public bool IsLeaf => _value != null;
+        public SnailNumber Sum(SnailNumber n)
+        {
+            var res = new SnailNumber(null, this, n);
+            _parent = res;
+            n._parent = res;
+            res.Reduce();
+            return res;
+        }
+        public static SnailNumber operator +(SnailNumber a, SnailNumber b)
+        {
+            return a.Sum(b);
+        }
         public void Reduce()
         {
-            var t = FindExplosion(0);
-            if (t != null)
+            /*
+             * To reduce a snailfish number, you must repeatedly do the first action in this list that applies to the snailfish number:
+             * - If any pair is nested inside four pairs, the leftmost such pair explodes.
+             * - If any regular number is 10 or greater, the leftmost such regular number splits.
+             * During reduction, at most one action applies, after which the process returns to the top of the list of actions. 
+             * For example, if split produces a pair that meets the explode criteria, that pair explodes before other splits occur.
+             */
+            while (Explode() || Split()) // lazy evaluation of || FTW
             {
-                //todo: explode
-                Reduce();
-                return;
+                while (Explode()) ;//explosion takes precedence over splitting. All possible explosions need to be taken care of first.
+                Split();
             }
         }
 
-        private void Explode()
+        public bool Explode()
         {
-            
+            /*
+             * To explode a pair, the pair's left value is added to the first regular 
+             * number to the left of the exploding pair (if any), and the pair's right 
+             * value is added to the first regular number to the right of the exploding 
+             * pair (if any). Exploding pairs will always consist of two regular numbers.
+             * Then, the entire exploding pair is replaced with the regular number 0.
+             */
+            return ExplodeInt(0);
         }
 
-        private SnailNumber FindExplosion(int depth)
+        private bool ExplodeInt(int depth)
         {
-            if (_isLiteral) return null;
+            var result = false;
+            if (IsLeaf)
+                result = false;
 
-            if(depth == 3)
+
+            if (depth == 3)
             {
-                if (!_values[0]._isLiteral)
+                if (_left != null && !_left.IsLeaf)
                 {
-                    var numberToExplode = _values[0];
-                    _values[0] = new SnailNumber(0);
-
-                    return _values[0];
+                    var leftRegularNumber = _left.FindFirstLeftRegularNumber();
+                    if (leftRegularNumber != null)
+                        leftRegularNumber._value += _left._left._value;
+                    var rightRegularNumber = _left.FindFirstRightRegularNumber();
+                    if (rightRegularNumber != null)
+                        rightRegularNumber._value += _left._right._value;
+                    _left = new SnailNumber(this, 0);
+                    return true;
                 }
-                if (!_values[1]._isLiteral)
+                if (_right != null && !_right.IsLeaf)
                 {
-                    return _values[1];
+                    var leftRegularNumber = _right.FindFirstLeftRegularNumber();
+                    if (leftRegularNumber != null)
+                        leftRegularNumber._value += _right._left._value;
+                    var rightRegularNumber = _right.FindFirstRightRegularNumber();
+                    if (rightRegularNumber != null)
+                        rightRegularNumber._value += _right._right._value;
+                    _right = new SnailNumber(this, 0);
+                    return true;
                 }
-                return null;
+                return false;
             }
 
-            var leftExplosion = _values[0].FindExplosion(depth + 1);
-            if (leftExplosion != null)
-                return leftExplosion;
-            return _values[1].FindExplosion(depth + 1);
+            if (_left != null)
+                result = _left.ExplodeInt(depth + 1);
+
+            if (!result && _right != null)
+                result = _right.ExplodeInt(depth + 1);
+
+            return result;
         }
 
-        private void ExecuteExplosion(SnailNumber parent, SnailNumber exploded)
+        private SnailNumber FindFirstLeftRegularNumber()
         {
-            if(parent._values[0].ToString() == exploded.ToString())
+            if (_parent == null) return null;
+
+            var currentNode = this;
+            var firstLeftRegularNumber = _parent;
+
+            while (firstLeftRegularNumber != null && firstLeftRegularNumber._left == currentNode)
             {
-                parent._values[0] = new SnailNumber(0);
-                parent._values[1]._literal += exploded._literal;
+                currentNode = firstLeftRegularNumber;
+                firstLeftRegularNumber = firstLeftRegularNumber._parent;
             }
-            else if (parent._values[1].ToString() == exploded.ToString())
+
+            if (firstLeftRegularNumber == null) return null;
+
+            if (firstLeftRegularNumber.IsLeaf) return firstLeftRegularNumber;
+
+            firstLeftRegularNumber = firstLeftRegularNumber._left;
+
+            while (firstLeftRegularNumber._right != null)
             {
-                parent._values[0]._literal += exploded._literal;
-                parent._values[1] = new SnailNumber(0);
+                firstLeftRegularNumber = firstLeftRegularNumber._right;
             }
+            return firstLeftRegularNumber;
         }
 
-        private void Split()
+        private SnailNumber FindFirstRightRegularNumber()
         {
+            if (_parent == null) return null;
 
+            var currentNode = this;
+            var firstRightRegularNumber = _parent;
+
+            while (firstRightRegularNumber != null && firstRightRegularNumber._right == currentNode)
+            {
+                currentNode = firstRightRegularNumber;
+                firstRightRegularNumber = firstRightRegularNumber._parent;
+            }
+
+            if (firstRightRegularNumber == null) return null;
+
+            if (firstRightRegularNumber.IsLeaf) return firstRightRegularNumber;
+
+            firstRightRegularNumber = firstRightRegularNumber._right;
+
+            while (firstRightRegularNumber._left != null)
+            {
+                firstRightRegularNumber = firstRightRegularNumber._left;
+            }
+            return firstRightRegularNumber;
+        }
+
+        public bool Split()
+        {
+            /* To split a regular number, replace it with a pair; the left element of the 
+             * pair should be the regular number divided by two and rounded down, while 
+             * the right element of the pair should be the regular number divided by two and rounded up.
+             */
+            var res = false;
+            //first: split left subtree
+            if (_left != null)
+            {
+                res = _left.Split();
+            }
+            if (res) return true; //max 1 split each time
+
+            if (IsLeaf && _value >= 10)
+            {
+                var x = (int)Math.Floor((double)_value / 2.0);
+                var y = (int)Math.Ceiling((double)_value / 2.0);
+                _value = null;
+                _left = new SnailNumber(this, x);
+                _right = new SnailNumber(this, y);
+                return true;
+            }
+
+            //split right subtree
+            if (_right != null)
+            {
+                res = _right.Split() || res;
+            }
+
+            if (res) return true;
+
+            return false;
         }
 
         public int CalculateMagnitude()
         {
-            if (_isLiteral)
-                return _literal;
-            return (3 * _values[0].CalculateMagnitude()) + (2 * _values[1].CalculateMagnitude());
+            if (_value != null)
+                return _value.Value;
+            return (3 * _left.CalculateMagnitude()) + (2 * _right.CalculateMagnitude());
         }
 
         public override string ToString()
         {
-            if (_isLiteral)
+            if (_value != null)
             {
-                return _literal.ToString();
+                return _value.ToString();
             }
             else
             {
                 StringBuilder sb = new StringBuilder();
-                sb.Append('[').Append(_values[0]).Append(',').Append(_values[1]).Append(']');
+                sb.Append('[').Append(_left).Append(',').Append(_right).Append(']');
                 return sb.ToString();
             }
         }
