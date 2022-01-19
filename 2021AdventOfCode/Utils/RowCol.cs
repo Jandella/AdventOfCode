@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace _2021AdventOfCode
+namespace _2021AdventOfCode.Utils
 {
     public class RowCol
     {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using _2021AdventOfCode.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
