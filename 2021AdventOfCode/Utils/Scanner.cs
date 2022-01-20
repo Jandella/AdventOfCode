@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.VisualBasic.CompilerServices;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -35,7 +36,7 @@ namespace _2021AdventOfCode.Utils
             {
                 Beacons.Add(new Coordinate3D(coord));
             }
-            
+
         }
         public int ManhattanDistance(Scanner other)
         {
@@ -44,6 +45,115 @@ namespace _2021AdventOfCode.Utils
             var z = Math.Abs(RelativePosition.Z - other.RelativePosition.Z);
 
             return x + y + z;
+        }
+
+        private Scanner RotateScanner(string order)
+        {
+            var res = new Scanner();
+            var tokens = order.Split(",");
+            foreach (var beacon in Beacons)
+            {
+                var rotatedCoord = new Coordinate3D();
+                foreach (var token in tokens)
+                {
+                    switch (token)
+                    {
+                        case "-x":
+                            rotatedCoord.X = -1 * beacon.X;
+                            break;
+                        case "x":
+                            rotatedCoord.X = beacon.X;
+                            break;
+                        case "-y":
+                            rotatedCoord.Y = -1 * beacon.Y;
+                            break;
+                        case "y":
+                            rotatedCoord.Y = beacon.Y;
+                            break;
+                        case "-z":
+                            rotatedCoord.Z = -1 * beacon.Z;
+                            break;
+                        case "z":
+                            rotatedCoord.Z = beacon.Z;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                res.Beacons.Add(rotatedCoord);
+                
+            }
+            res.RelativePosition = new Coordinate3D()
+            {
+                X = 0,
+                Y = 0,
+                Z = 0
+            };
+            return res;
+        }
+
+        private Scanner OffsetScanner(Coordinate3D offset)
+        {
+            var res = new Scanner();
+            foreach (var beacon in Beacons)
+            {
+                res.Beacons.Add(new Coordinate3D
+                {
+                    X = beacon.X + offset.X,
+                    Y = beacon.Y + offset.Y,
+                    Z = beacon.Z + offset.Z
+                });
+            }
+            res.RelativePosition = new Coordinate3D
+            {
+                X = 0,
+                Y = 0,
+                Z = 0
+            };
+            return res;
+        }
+        public Scanner MatchBeacons(Scanner obj)
+        {
+            var orders = GetAllCoordinatePermutations();
+
+            foreach (var order in orders)
+            {
+                var rotatedScanner = obj.RotateScanner(order);
+                foreach (var beaconPos in Beacons)
+                {
+                    foreach (var otherBeaconPos in obj.Beacons)
+                    {
+                        var offset = beaconPos - otherBeaconPos;
+                        var temp = rotatedScanner.OffsetScanner(offset);
+                        if (MinBeaconsMatch(temp))
+                        {
+                            temp.RelativePosition = offset;
+                            return temp;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        private bool MinBeaconsMatch(Scanner other)
+        {
+            var intersection = new List<Coordinate3D>();
+
+            for (int i = 0; i < other.Beacons.Count; i++)
+            {
+                if (Beacons.Contains(other.Beacons[i]))
+                {
+                    intersection.Add(other.Beacons[i]);
+                }
+            }
+
+            if (intersection.Count >= MIN_MATCHES)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private static List<string> GetAllCoordinatePermutations()

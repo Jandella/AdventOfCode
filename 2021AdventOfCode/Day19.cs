@@ -182,6 +182,8 @@ namespace _2021AdventOfCode
             throw new NotImplementedException();
         }
 
+
+        
         internal int Quiz2()
         {
             throw new NotImplementedException();
