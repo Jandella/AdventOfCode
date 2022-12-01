@@ -362,3 +362,4 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /2021AdventOfCode/Inputs
+/2022AdventOfCode/Inputs
