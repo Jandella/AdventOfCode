@@ -46,7 +46,7 @@ C Z";
         {
             var d = new Day02();
             var result = await d.Solve_2();
-            Assert.Equal("0", result);
+            Assert.Equal("11186", result);
 
         }
     }
