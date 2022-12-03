@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace _2022AdventOfCode.Tests
 {
-    public class Dai02Tests
+    public class Day02Tests
     {
         [Fact]
         public async Task TestDay2_Solve1()
