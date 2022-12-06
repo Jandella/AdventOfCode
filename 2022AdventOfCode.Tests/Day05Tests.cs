@@ -52,7 +52,7 @@ move 1 from 1 to 2";
         {
             var d = new Day05(exampleInput);
             var result = await d.Solve_2();
-            Assert.Equal("12", result);
+            Assert.Equal("MCD", result);
 
         }
 
@@ -70,7 +70,7 @@ move 1 from 1 to 2";
         {
             var d = new Day05();
             var result = await d.Solve_2();
-            Assert.Equal("", result);
+            Assert.Equal("TZLTLWRNF", result);
 
         }
     }

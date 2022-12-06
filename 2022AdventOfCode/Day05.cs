@@ -45,7 +45,32 @@ namespace _2022AdventOfCode
 
         public override ValueTask<string> Solve_2()
         {
-            throw new NotImplementedException();
+            var inputParts = _input.Split(Environment.NewLine + Environment.NewLine);
+            var crates = new StackOfCrates(inputParts[0]);
+            var instructionsSplitted = inputParts[1].Split("\n");
+
+            foreach (var item in instructionsSplitted)
+            {
+                var currentInstruction = new CraneInstruction(item);
+                var indexToMove = currentInstruction.From - 1; //0 based
+                var destIndex = currentInstruction.To - 1;
+                var firstnCrates = new char[currentInstruction.Move];
+                for (int i = 0; i < currentInstruction.Move; i++)
+                {
+                    firstnCrates[i] = crates.Crates[indexToMove].Pop();
+                }
+                for (int i = currentInstruction.Move -1; i >= 0; i--)
+                {
+                    crates.Crates[destIndex].Push(firstnCrates[i]);
+                }
+                
+            }
+            string res = "";
+            foreach (var item in crates.Crates)
+            {
+                res += item.Peek();
+            }
+            return new ValueTask<string>(res);
         }
     }
 
@@ -97,5 +122,9 @@ namespace _2022AdventOfCode
         public int Move { get; set; }
         public int From { get; set; }
         public int To { get; set; }
+        public override string ToString()
+        {
+            return $"move {Move} from {From} to {To}";
+        }
     }
 }

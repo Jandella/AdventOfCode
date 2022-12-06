@@ -2,4 +2,4 @@
 using AoCHelper;
 
 Console.WriteLine("Advent of code!");
-Solver.SolveLast();
+Solver.SolveAll();
