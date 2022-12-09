@@ -18,87 +18,123 @@ namespace _2022AdventOfCode
         {
             _input = input;
         }
-
-        public override ValueTask<string> Solve_1()
+        private List<DeviceDirectory> ParseInput()
         {
-            int total = 0;
-            var stack = new Stack<DeviceDirectory>();
             var dirs = new List<DeviceDirectory>();
-            using (StringReader r = new(_input))
+            DeviceDirectory? currentNode = null;
+            using (StringReader r = new StringReader(_input))
             {
                 while (r.Peek() != -1)
                 {
                     string line = r.ReadLine() ?? "-";
-                    if (line.StartsWith("$ cd"))
+                    if (line.StartsWith("$"))
                     {
-                        var dirName = line.Substring("$cd ".Length + 1);
-                        if(dirName == "..")
+                        if (line.Equals("$ ls"))
+                            continue;
+                        if (!line.Equals("$ cd .."))
                         {
-                            //go back
-                            var poppedDir = stack.Pop();
-                            if(poppedDir.Size <= 100000)
+                            string nodeName = line.Split(' ')[2];
+                            if (currentNode == null)
                             {
-                                if(stack.Count > 0)
+                                var node = new DeviceDirectory
                                 {
-                                    var current = stack.Peek();
-                                    current.Size += poppedDir.Size;
+                                    Name = nodeName,
+                                    Parent = currentNode
+                                };
+
+                                currentNode = node;
+
+                                dirs.Add(node);
+                            }
+                            else
+                            {
+                                var child = currentNode.SubDirs
+                                    .Where(x => x.Name == nodeName).FirstOrDefault();
+                                if (child != null)
+                                {
+                                    child.Parent = currentNode;
+                                    currentNode = child;
                                 }
-                                //when popped, we should have the right size
-                                total+= poppedDir.Size;
                             }
 
                         }
                         else
                         {
-                            var newDir = new DeviceDirectory()
+                            if(currentNode != null)
                             {
-                                Name = dirName,
-                            };
-                            dirs.Add(newDir);
-                            if(stack.Count > 0)
-                            {
-                                // Add new directory as sub directory of current directory
-                                var current = stack.Peek();
-                                current.SubDirs.Add(newDir);
+                                int size = currentNode.Size;
+
+                                currentNode = currentNode.Parent;
+
+                                if (currentNode != null)
+                                    currentNode.Size += size;
                             }
-                            stack.Push(newDir);
+                            
+
                         }
+                        continue;
                     }
-                    else if(!line.StartsWith("$ ls"))
+                    else if (line.StartsWith("dir"))
                     {
-                        //it's either a directory or a file
-                        var splitted = line.Split(' ');
-                        var current = stack.Peek();
-                        if (splitted[0] == "dir")
-                        {   
-                            var newItem = new DeviceDirectory()
-                            {
-                                Name = splitted[1],
-                            };
-                        }
-                        else
+                        var child = new DeviceDirectory
                         {
-                            current.Size += int.Parse(splitted[0]);
+                            Name = line.Split(' ')[1]
+                        };
+                        if (currentNode != null)
+                        {
+                            currentNode.SubDirs.Add(child);
+                        }
+                        dirs.Add(child);
+                    }
+                    else
+                    {
+                        int values = int.Parse(line.Split(' ')[0]);
+                        if (currentNode != null)
+                        {
+                            currentNode.Size += values;
                         }
                     }
-                    
                 }
             }
-            var aaaa = dirs.Select(directory => directory.Size).Where(fileSize => fileSize <= 100000).Sum();
+            //go back to sum last folder size to parent
+            while (currentNode != null)
+            {
+                int size = currentNode.Size;
+
+                currentNode = currentNode.Parent;
+
+                if (currentNode != null)
+                    currentNode.Size += size;
+            }
+            return dirs;
+        }
+        public override ValueTask<string> Solve_1()
+        {
+
+            var dirs = ParseInput();
+            var total = dirs.Select(directory => directory.Size).Where(fileSize => fileSize <= 100000).Sum();
             return new ValueTask<string>(total.ToString());
         }
 
         public override ValueTask<string> Solve_2()
         {
-            throw new NotImplementedException();
+            var dirs = ParseInput();
+            var totalDiskSpace = 70000000;
+            var unusedSpaceNeeded = 30000000;
+            var root = dirs.First(x => x.Name == "/");
+            var total = root.Size;
+            var unusedSpace = totalDiskSpace - total;
+            var minSizeNeeded = unusedSpaceNeeded - unusedSpace;
+            var minSize = dirs.Where(x => x.Size >= minSizeNeeded).Min(x => x.Size);
+            return new ValueTask<string>(minSize.ToString());
         }
     }
 
     public class DeviceDirectory
     {
+        public DeviceDirectory? Parent { get; set; }
         public string? Name { get; set; }
         public List<DeviceDirectory> SubDirs { get; set; } = new List<DeviceDirectory>();
-        public List<string> Files { get; set; } = new List<string>();
         public int Size { get; set; }
         public override string ToString()
         {

@@ -38,7 +38,7 @@ $ ls
         {
             var d = new Day07(exampleInput);
             var result = await d.Solve_1();
-            Assert.Equal("1428881", result);
+            Assert.Equal("95437", result);
 
         }
 
@@ -47,7 +47,7 @@ $ ls
         {
             var d = new Day07(exampleInput);
             var result = await d.Solve_2();
-            Assert.Equal("", result);
+            Assert.Equal("24933642", result);
 
         }
 
@@ -56,7 +56,7 @@ $ ls
         {
             var d = new Day07();
             var result = await d.Solve_1();
-            Assert.Equal("", result);
+            Assert.Equal("1428881", result);
 
         }
 
