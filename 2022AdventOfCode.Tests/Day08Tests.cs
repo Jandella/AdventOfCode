@@ -18,7 +18,7 @@ namespace _2022AdventOfCode.Tests
         {
             var d = new Day08(exampleInput);
             var result = await d.Solve_1();
-            Assert.Equal("", result);
+            Assert.Equal("21", result);
 
         }
 
