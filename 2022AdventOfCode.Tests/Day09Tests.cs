@@ -39,7 +39,7 @@ R 2";
         {
             var d = new Day09();
             var result = await d.Solve_1();
-            Assert.Equal("", result);
+            Assert.Equal("6011", result);
 
         }
 
