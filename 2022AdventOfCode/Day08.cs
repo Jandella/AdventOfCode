@@ -146,7 +146,100 @@ namespace _2022AdventOfCode
         }
         public override ValueTask<string> Solve_2()
         {
-            throw new NotImplementedException();
+            var map = GetTreeMap();
+            int maxScore = int.MinValue;
+            for (int r = 1; r < map.GetLength(0) - 1; r++) //skipping first e last row
+            {
+                for (int c = 0; c < map.GetLength(1); c++)
+                {
+                    var currentScore = TopScore(map, r, c) * BottomScore(map, r, c)
+                        * RightScore(map, r, c) * LeftScore(map, r, c);
+                    if(currentScore > maxScore)
+                    {
+                        maxScore = currentScore;
+                    }
+                }
+            }
+            return new ValueTask<string>(maxScore.ToString());
+        }
+
+        private int TopScore(int[,] map, int r, int c)
+        {
+            var visibleTopRow = 0;
+            var visibleBottomRow = map.GetLength(0) - 1;
+            if (r == visibleTopRow || r == visibleBottomRow)
+            {
+                return 0;
+            }
+            var score = 0;
+            var currentTreeHeight = map[r, c];
+            for (int i = r - 1; i >= 0; i--)
+            {
+                var topTreeHeight = map[i, c];
+                if (currentTreeHeight >= topTreeHeight)
+                    score++;
+                if (currentTreeHeight <= topTreeHeight)
+                    break;
+            }
+            return score;
+        }
+        private int BottomScore(int[,] map, int r, int c)
+        {
+            var visibleTopRow = 0;
+            var visibleBottomRow = map.GetLength(0) - 1;
+            if (r == visibleTopRow || r == visibleBottomRow)
+            {
+                return 0;
+            }
+            var score = 0;
+            var currentTreeHeight = map[r, c];
+            for (int i = r + 1; i <= visibleBottomRow; i++)
+            {
+                var bottomHeight = map[i, c];
+                if (currentTreeHeight >= bottomHeight)
+                    score++;
+                if (currentTreeHeight <= bottomHeight)
+                    break;
+            }
+            return score;
+        }
+        private int RightScore(int[,] map, int r, int c)
+        {
+            var visibleLeftColumn = 0;
+            var visibleRightColumn = map.GetLength(1) - 1;
+            if (r == visibleLeftColumn || r == visibleRightColumn)
+            {
+                return 0;
+            }
+            var score = 0;
+            var currentTreeHeight = map[r, c];
+            for (int i = c + 1; i <= visibleRightColumn; i++)
+            {
+                var rightTreeHeight = map[r, i];
+                if (currentTreeHeight >= rightTreeHeight)
+                    score++;
+            }
+            return score;
+        }
+        private int LeftScore(int[,] map, int r, int c)
+        {
+            var visibleLeftColumn = 0;
+            var visibleRightColumn = map.GetLength(1) - 1;
+            if (r == visibleLeftColumn || r == visibleRightColumn)
+            {
+                return 0;
+            }
+            var score = 0;
+            var currentTreeHeight = map[r, c];
+            for (int i = c - 1; i >= 0; i--)
+            {
+                var leftTreeHeight = map[r, i];
+                if (currentTreeHeight >= leftTreeHeight)
+                    score++;
+                if (currentTreeHeight <= leftTreeHeight)
+                    break;
+            }
+            return score;
         }
     }
 }
