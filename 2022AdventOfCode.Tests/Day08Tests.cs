@@ -36,7 +36,7 @@ namespace _2022AdventOfCode.Tests
         {
             var d = new Day08();
             var result = await d.Solve_1();
-            Assert.Equal("", result);
+            Assert.Equal("1690", result);
 
         }
 

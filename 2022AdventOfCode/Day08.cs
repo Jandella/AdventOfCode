@@ -50,6 +50,7 @@ namespace _2022AdventOfCode
             var map = GetTreeMap();
             var visibleColumns = new int[] { 0, map.GetLength(1) - 1 };
             var numberOfVisibleTrees = map.GetLength(0) * 2; // the first and last row are all visible trees
+            var listOfVisibleTree = new List<string>();
             for (int r = 1; r < map.GetLength(0) - 1; r++) //skipping first e last row
             {
                 for (int c = 0; c < map.GetLength(1); c++)
@@ -57,20 +58,17 @@ namespace _2022AdventOfCode
                     if (visibleColumns.Contains(c))
                     {
                         numberOfVisibleTrees++;
+                        listOfVisibleTree.Add($"{map[r, c]} ({r},{c})");
                     }
                     else
                     {
-                        var currentTreeHeight = map[r, c];
-                        var topTreeHeight = map[r - 1, c];
-                        var bottomTreeHeight = map[r + 1, c];
-                        var rightTreeHeight = map[r, c + 1];
-                        var leftTreeHeight = map[r, c - 1];
-                        if(IsVisibleTop(map, r,c)
-                            || IsVisibleBottom(map, r, c)
-                            || IsVisibleLeft(map, r, c)
-                            || IsVisibleRight(map, r, c))
+                        if(!IsHiddenTop(map, r,c)
+                            || !IsHiddenBottom(map, r, c)
+                            || !IsHiddenLeft(map, r, c)
+                            || !IsHiddenRight(map, r, c))
                         {
                             numberOfVisibleTrees++;
+                            listOfVisibleTree.Add($"{map[r, c]} ({r},{c})");
                         }
                     }
                 }
@@ -78,73 +76,73 @@ namespace _2022AdventOfCode
             return new ValueTask<string>(numberOfVisibleTrees.ToString());
         }
 
-        private bool IsVisibleTop(int[,]map, int r, int c)
+        private bool IsHiddenTop(int[,]map, int r, int c)
         {
             var visibleTopRow = 0;
             var visibleBottomRow = map.GetLength(0) - 1;
             if (r == visibleTopRow || r == visibleBottomRow)
             {
-                return true;
+                return false;
             }
             var currentTreeHeight = map[r, c];
             for (int i = r-1; i >= 0; i--)
             {
                 var topTreeHeight = map[i, c];
-                if (currentTreeHeight < topTreeHeight)
-                    return false;
+                if (currentTreeHeight <= topTreeHeight)
+                    return true;
             }
-            return true;
+            return false;
         }
-        private bool IsVisibleBottom(int[,]map, int r, int c)
+        private bool IsHiddenBottom(int[,]map, int r, int c)
         {
             var visibleTopRow = 0;
             var visibleBottomRow = map.GetLength(0) - 1;
             if (r == visibleTopRow || r == visibleBottomRow)
             {
-                return true;
+                return false;
             }
             var currentTreeHeight = map[r, c];
             for (int i = r+1; i <= visibleBottomRow; i++)
             {
                 var bottomHeight = map[i, c];
-                if (currentTreeHeight < bottomHeight)
-                    return false;
+                if (currentTreeHeight <= bottomHeight)
+                    return true;
             }
-            return true;
+            return false;
         }
-        private bool IsVisibleRight(int[,] map, int r, int c)
+        private bool IsHiddenRight(int[,] map, int r, int c)
         {
             var visibleLeftColumn = 0;
             var visibleRightColumn = map.GetLength(1) - 1;
             if (r == visibleLeftColumn || r == visibleRightColumn)
             {
-                return true;
+                return false;
             }
             var currentTreeHeight = map[r, c];
             for (int i = c + 1; i <= visibleRightColumn; i++)
             {
                 var rightTreeHeight = map[r, i];
-                if (currentTreeHeight < rightTreeHeight)
-                    return false;
+                if (currentTreeHeight <= rightTreeHeight)
+                    return true;
             }
-            return true;
+            return false;
         }
-        private bool IsVisibleLeft(int[,] map, int r, int c)
+        private bool IsHiddenLeft(int[,] map, int r, int c)
         {
             var visibleLeftColumn = 0;
             var visibleRightColumn = map.GetLength(1) - 1;
             if (r == visibleLeftColumn || r == visibleRightColumn)
             {
-                return true;
+                return false;
             }
             var currentTreeHeight = map[r, c];
             for (int i = c - 1; i >= 0; i--)
             {
                 var leftTreeHeight = map[r, i];
-                if (currentTreeHeight < leftTreeHeight)
-                    return false;
+                if (currentTreeHeight <= leftTreeHeight)
+                    return true;
             }
-            return true;
+            return false;
         }
         public override ValueTask<string> Solve_2()
         {
