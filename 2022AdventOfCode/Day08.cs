@@ -21,22 +21,22 @@ namespace _2022AdventOfCode
 
         public int[,] GetTreeMap()
         {
-            int[,] res = new int[0,0];
+            int[,] res = new int[0, 0];
             int row = 0;
             using (StringReader r = new StringReader(_input))
             {
-                while(r.Peek()!= -1)
+                while (r.Peek() != -1)
                 {
                     string? line = r.ReadLine();
-                    if(line != null)
+                    if (line != null)
                     {
-                        if(row == 0)
+                        if (row == 0)
                         {
-                            res = new int[line.Length, line.Length];     
+                            res = new int[line.Length, line.Length];
                         }
                         for (int i = 0; i < line.Length; i++)
                         {
-                            res[row,i] = int.Parse(line[i].ToString());
+                            res[row, i] = int.Parse(line[i].ToString());
                         }
                         row++;
                     }
@@ -62,7 +62,7 @@ namespace _2022AdventOfCode
                     }
                     else
                     {
-                        if(!IsHiddenTop(map, r,c)
+                        if (!IsHiddenTop(map, r, c)
                             || !IsHiddenBottom(map, r, c)
                             || !IsHiddenLeft(map, r, c)
                             || !IsHiddenRight(map, r, c))
@@ -76,7 +76,7 @@ namespace _2022AdventOfCode
             return new ValueTask<string>(numberOfVisibleTrees.ToString());
         }
 
-        private bool IsHiddenTop(int[,]map, int r, int c)
+        private bool IsHiddenTop(int[,] map, int r, int c)
         {
             var visibleTopRow = 0;
             var visibleBottomRow = map.GetLength(0) - 1;
@@ -85,7 +85,7 @@ namespace _2022AdventOfCode
                 return false;
             }
             var currentTreeHeight = map[r, c];
-            for (int i = r-1; i >= 0; i--)
+            for (int i = r - 1; i >= 0; i--)
             {
                 var topTreeHeight = map[i, c];
                 if (currentTreeHeight <= topTreeHeight)
@@ -93,7 +93,7 @@ namespace _2022AdventOfCode
             }
             return false;
         }
-        private bool IsHiddenBottom(int[,]map, int r, int c)
+        private bool IsHiddenBottom(int[,] map, int r, int c)
         {
             var visibleTopRow = 0;
             var visibleBottomRow = map.GetLength(0) - 1;
@@ -102,7 +102,7 @@ namespace _2022AdventOfCode
                 return false;
             }
             var currentTreeHeight = map[r, c];
-            for (int i = r+1; i <= visibleBottomRow; i++)
+            for (int i = r + 1; i <= visibleBottomRow; i++)
             {
                 var bottomHeight = map[i, c];
                 if (currentTreeHeight <= bottomHeight)
@@ -154,7 +154,7 @@ namespace _2022AdventOfCode
                 {
                     var currentScore = TopScore(map, r, c) * BottomScore(map, r, c)
                         * RightScore(map, r, c) * LeftScore(map, r, c);
-                    if(currentScore > maxScore)
+                    if (currentScore > maxScore)
                     {
                         maxScore = currentScore;
                     }
@@ -176,8 +176,8 @@ namespace _2022AdventOfCode
             for (int i = r - 1; i >= 0; i--)
             {
                 var topTreeHeight = map[i, c];
-                if (currentTreeHeight >= topTreeHeight)
-                    score++;
+
+                score++;
                 if (currentTreeHeight <= topTreeHeight)
                     break;
             }
@@ -196,8 +196,8 @@ namespace _2022AdventOfCode
             for (int i = r + 1; i <= visibleBottomRow; i++)
             {
                 var bottomHeight = map[i, c];
-                if (currentTreeHeight >= bottomHeight)
-                    score++;
+
+                score++;
                 if (currentTreeHeight <= bottomHeight)
                     break;
             }
@@ -216,8 +216,10 @@ namespace _2022AdventOfCode
             for (int i = c + 1; i <= visibleRightColumn; i++)
             {
                 var rightTreeHeight = map[r, i];
-                if (currentTreeHeight >= rightTreeHeight)
-                    score++;
+
+                score++;
+                if (currentTreeHeight <= rightTreeHeight)
+                    break;
             }
             return score;
         }
@@ -234,8 +236,7 @@ namespace _2022AdventOfCode
             for (int i = c - 1; i >= 0; i--)
             {
                 var leftTreeHeight = map[r, i];
-                if (currentTreeHeight >= leftTreeHeight)
-                    score++;
+                score++;
                 if (currentTreeHeight <= leftTreeHeight)
                     break;
             }
