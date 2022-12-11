@@ -28,9 +28,25 @@ R 2";
         [Fact]
         public async Task TestDay9_Solve2()
         {
-            var d = new Day09(exampleInput);
+            var d = new Day09(exampleInput, 10);
             var result = await d.Solve_2();
-            Assert.Equal("", result);
+            Assert.Equal("1", result);
+
+        }
+
+        [Fact]
+        public async Task TestDay9_Solve2_Example2()
+        {
+            var d = new Day09(@"R 5
+U 8
+L 8
+D 3
+R 17
+D 10
+L 25
+U 20", 10);
+            var result = await d.Solve_2();
+            Assert.Equal("36", result);
 
         }
 
@@ -46,9 +62,9 @@ R 2";
         [Fact]
         public async Task TestDay9_Solve2_FileInput()
         {
-            var d = new Day09();
+            var d = new Day09(10);
             var result = await d.Solve_2();
-            Assert.Equal("", result);
+            Assert.Equal("2419", result);
 
         }
     }

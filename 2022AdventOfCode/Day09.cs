@@ -9,13 +9,16 @@ namespace _2022AdventOfCode
     public class Day09 : AoCHelper.BaseDay
     {
         private string _input;
-        public Day09()
+        private int _numberOfKnots;
+        public Day09(int numberOfKnots = 2)
         {
             _input = System.IO.File.ReadAllText(InputFilePath);
+            _numberOfKnots = numberOfKnots;
         }
-        public Day09(string input)
+        public Day09(string input, int numberOfKnots = 2)
         {
             _input = input;
+            _numberOfKnots = numberOfKnots;
         }
         public override ValueTask<string> Solve_1()
         {
@@ -48,7 +51,44 @@ namespace _2022AdventOfCode
 
         public override ValueTask<string> Solve_2()
         {
-            throw new NotImplementedException();
+            var list = new List<RopeEdge>();
+            for (int i = 0; i < _numberOfKnots; i++)
+            {
+                list.Add(new RopeEdge(0, 0));
+            }
+            var rope = new RopeKnots(list);
+            var positions = new HashSet<RopeEdge>();
+            positions.Add(rope.Tail);
+            using (StringReader r = new StringReader(_input))
+            {
+                while (r.Peek() != -1)
+                {
+                    var line = r.ReadLine() ?? "- 0";
+                    var splitted = line.Split(" ");
+                    var direction = splitted[0][0];
+                    var steps = int.Parse(splitted[1]);
+                    for (int i = 0; i < steps; i++)
+                    {
+                        var previous = rope.Head.Move(direction);
+                        var tempList = new List<RopeEdge>();
+                        tempList.Add(previous);
+                        for (int j = 1; j < rope.Knots.Count; j++)
+                        {
+                            var item = rope.Knots[j];
+                            var newPos = item.Follow(previous);
+                            tempList.Add(newPos);
+                            previous = newPos;
+                        }
+                        rope = new RopeKnots(tempList);
+                        if (!positions.Contains(rope.Tail))
+                        {
+                            positions.Add(rope.Tail);
+                        }
+
+                    }
+                }
+            }
+            return new ValueTask<string>(positions.Count.ToString());
         }
     }
     public class RopeKnots
@@ -57,14 +97,31 @@ namespace _2022AdventOfCode
         {
             Head = new RopeEdge(r, c);
             Tail = new RopeEdge(r, c);
+            Knots = new List<RopeEdge> { Head, Tail };
         }
         public RopeKnots(int rHead, int cHead, int rTail, int cTail)
         {
             Head = new RopeEdge(rHead, cHead);
             Tail = new RopeEdge(rTail, cTail);
+            Knots = new List<RopeEdge> { Head, Tail };
+        }
+        public RopeKnots(IEnumerable<RopeEdge> knots)
+        {
+            if(knots.Count() < 2)
+            {
+                throw new ArgumentException("Too few knots");
+            }
+            Knots = new List<RopeEdge>();
+            foreach (var item in knots)
+            {
+                Knots.Add(new RopeEdge(item.Row, item.Col));
+            }
+            Head = Knots.First();
+            Tail = Knots.Last();
         }
         public RopeEdge Head { get; private set; }
         public RopeEdge Tail { get; private set; }
+        public List<RopeEdge> Knots { get; set; }
         
     }
 
