@@ -24,10 +24,7 @@ namespace _2022AdventOfCode
             var game = new KeepAwayGame(_input);
             for (int round = 1; round <= 20; round++)
             {
-                foreach (var m in game.Monkeys)
-                {
-                    game.PlayTurn(m.Value);
-                }
+                game.PlayRound();
             }
             var topTwoActive = game.Monkeys.OrderByDescending(x => x.Value.Activity).Take(2).ToList();
             var total = topTwoActive[0].Value.Activity * topTwoActive[1].Value.Activity;
@@ -36,13 +33,21 @@ namespace _2022AdventOfCode
 
         public override ValueTask<string> Solve_2()
         {
-            throw new NotImplementedException();
+            var game = new KeepAwayGame(_input, false);
+            for (int round = 1; round <= 10000; round++)
+            {
+                game.PlayRound();
+            }
+            var topTwoActive = game.Monkeys.OrderByDescending(x => x.Value.Activity).Take(2).ToList();
+            var total = topTwoActive[0].Value.Activity * topTwoActive[1].Value.Activity;
+            return new ValueTask<string>(total.ToString());
         }
     }
 
     public class KeepAwayGame
     {
-        public KeepAwayGame(string input)
+        private long _lcm = 1;
+        public KeepAwayGame(string input, bool bored = true)
         {
             var splitted = input.Split(Environment.NewLine + Environment.NewLine);
             Monkeys = new Dictionary<int, Monkey>();
@@ -51,9 +56,15 @@ namespace _2022AdventOfCode
                 var m = new Monkey(item);
                 Monkeys[m.MonkeyId] = m;
             }
+            BoredMonkeys = bored;
+            if (!BoredMonkeys)
+            {
+                //every test is with prime numbers, so lcm is all numbers multiplied
+                _lcm = Monkeys.Values.Select(x => x.Test).Distinct().Aggregate((a,b) => a * b);
+            }
         }
         public Dictionary<int, Monkey> Monkeys { get; set; }
-
+        public bool BoredMonkeys { get; set; }
         public void PlayTurn(Monkey m)
         {
             while (m.Stuff.Any())
@@ -62,8 +73,15 @@ namespace _2022AdventOfCode
                 //inspect
                 item.WorryLevel = m.Operation(item);
                 m.Activity++;
-                //monkeys get bored
-                item.WorryLevel = (long)Math.Floor((item.WorryLevel / 3.0));
+                if(BoredMonkeys)
+                {
+                    //monkeys get bored
+                    item.WorryLevel = (long)Math.Floor((item.WorryLevel / 3.0));
+                }
+                else
+                {
+                    item.WorryLevel = item.WorryLevel % _lcm;
+                }
                 //test worry
                 int monkeyToThrow = 0;
                 if(item.WorryLevel % m.Test == 0)
@@ -76,6 +94,13 @@ namespace _2022AdventOfCode
                 }
                 //throw to the other monkey
                 Monkeys[monkeyToThrow].Stuff.Enqueue(item);
+            }
+        }
+        public void PlayRound()
+        {
+            foreach (var m in Monkeys)
+            {
+                PlayTurn(m.Value);
             }
         }
     }

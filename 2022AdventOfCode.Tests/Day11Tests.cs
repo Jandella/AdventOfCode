@@ -48,8 +48,8 @@ Monkey 3:
             Assert.Equal(0, m.MonkeyId);
             Assert.Equal(2, m.Stuff.Count);
             var peeked = m.Stuff.Peek();
-            Assert.Equal(79, peeked.WorryLevel);
-            var espected = 79 * 19;
+            Assert.Equal((long)79, peeked.WorryLevel);
+            long espected = 79 * 19;
             var actual = m.Operation(peeked);
             Assert.Equal(espected, actual);
             Assert.Equal(23, m.Test);
@@ -84,6 +84,25 @@ Monkey 3:
             Assert.Empty(monkey3.Stuff);
         }
         [Fact]
+        public void TestDay11_PlayRound()
+        {
+            var game = new KeepAwayGame(exampleInput);
+            var monkey0 = game.Monkeys[0];
+            var monkey1 = game.Monkeys[1];
+            var monkey2 = game.Monkeys[2];
+            var monkey3 = game.Monkeys[3];
+            game.PlayRound();
+            //after round 1
+            //Monkey 0: 20, 23, 27, 26
+            //Monkey 1: 2080, 25, 167, 207, 401, 1046
+            //Monkey 2: 
+            //Monkey 3: 
+            Assert.Equal(4, monkey0.Stuff.Count);
+            Assert.Equal(6, monkey1.Stuff.Count);
+            Assert.Empty(monkey2.Stuff);
+            Assert.Empty(monkey3.Stuff);
+        }
+        [Fact]
         public async Task TestDay11_Solve1()
         {
             var d = new Day11(exampleInput);
@@ -93,11 +112,56 @@ Monkey 3:
         }
 
         [Fact]
+        public void TestDay11_NoWorry_PlayRound()
+        {
+            var game = new KeepAwayGame(exampleInput, false);
+            var monkey0 = game.Monkeys[0];
+            var monkey1 = game.Monkeys[1];
+            var monkey2 = game.Monkeys[2];
+            var monkey3 = game.Monkeys[3];
+            game.PlayRound();
+            //after round 1
+            //Monkey 0: 20, 23, 27, 26
+            //Monkey 1: 2080, 25, 167, 207, 401, 1046
+            //Monkey 2: 
+            //Monkey 3: 
+            Assert.Equal(2, monkey0.Activity);
+            Assert.Equal(4, monkey1.Activity);
+            Assert.Equal(3, monkey2.Activity);
+            Assert.Equal(6, monkey3.Activity);
+
+        }
+
+        [Fact]
+        public void TestDay11_NoWorry_Play20Round()
+        {
+            var game = new KeepAwayGame(exampleInput, false);
+            var monkey0 = game.Monkeys[0];
+            var monkey1 = game.Monkeys[1];
+            var monkey2 = game.Monkeys[2];
+            var monkey3 = game.Monkeys[3];
+            for (int i = 1; i <= 20; i++)
+            {
+                game.PlayRound();
+            }
+
+            //== After round 20 ==
+            //Monkey 0 inspected items 99 times.
+            //Monkey 1 inspected items 97 times.
+            //Monkey 2 inspected items 8 times.
+            //Monkey 3 inspected items 103 times.
+            Assert.Equal(99, monkey0.Activity);
+            Assert.Equal(97, monkey1.Activity);
+            Assert.Equal(8, monkey2.Activity);
+            Assert.Equal(103, monkey3.Activity);
+
+        }
+        [Fact]
         public async Task TestDay11_Solve2()
         {
             var d = new Day11(exampleInput);
             var result = await d.Solve_2();
-            Assert.Equal("", result);
+            Assert.Equal("2713310158", result);
 
         }
 
@@ -115,7 +179,7 @@ Monkey 3:
         {
             var d = new Day11();
             var result = await d.Solve_2();
-            Assert.Equal("", result);
+            Assert.Equal("23612457316", result);
 
         }
     }
