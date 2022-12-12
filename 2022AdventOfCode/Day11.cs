@@ -22,7 +22,7 @@ namespace _2022AdventOfCode
         public override ValueTask<string> Solve_1()
         {
             var game = new KeepAwayGame(_input);
-            for (int round = 0; round < 20; round++)
+            for (int round = 1; round <= 20; round++)
             {
                 foreach (var m in game.Monkeys)
                 {
@@ -30,7 +30,7 @@ namespace _2022AdventOfCode
                 }
             }
             var topTwoActive = game.Monkeys.OrderByDescending(x => x.Value.Activity).Take(2).ToList();
-            var total = topTwoActive[0].Value.Activity + topTwoActive[1].Value.Activity;
+            var total = topTwoActive[0].Value.Activity * topTwoActive[1].Value.Activity;
             return new ValueTask<string>(total.ToString());
         }
 
@@ -148,7 +148,7 @@ namespace _2022AdventOfCode
                     res = (i) =>
                     {
                         
-                        return i.WorryLevel * (worryFactor ?? i.WorryLevel);
+                        return i.WorryLevel + (worryFactor ?? i.WorryLevel);
                     };
                     break;
                 case "*":

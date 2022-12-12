@@ -57,7 +57,32 @@ Monkey 3:
             Assert.Equal(3, m.IfFalse);
 
         }
-
+        [Fact]
+        public void TestDay11_1Round()
+        {
+            var game = new KeepAwayGame(exampleInput);
+            var monkey0 = game.Monkeys[0];
+            game.PlayTurn(monkey0);
+            Assert.Empty(monkey0.Stuff);
+            var monkey1 = game.Monkeys[1];
+            game.PlayTurn(monkey1);
+            Assert.Empty(monkey1.Stuff);
+            var monkey2 = game.Monkeys[2];
+            game.PlayTurn(monkey2);
+            Assert.Empty(monkey2.Stuff);
+            var monkey3 = game.Monkeys[3];
+            game.PlayTurn(monkey3);
+            Assert.Empty(monkey3.Stuff);
+            //after round 1
+            //Monkey 0: 20, 23, 27, 26
+            //Monkey 1: 2080, 25, 167, 207, 401, 1046
+            //Monkey 2: 
+            //Monkey 3: 
+            Assert.Equal(4, monkey0.Stuff.Count);
+            Assert.Equal(6, monkey1.Stuff.Count);
+            Assert.Empty(monkey2.Stuff);
+            Assert.Empty(monkey3.Stuff);
+        }
         [Fact]
         public async Task TestDay11_Solve1()
         {
@@ -81,7 +106,7 @@ Monkey 3:
         {
             var d = new Day11();
             var result = await d.Solve_1();
-            Assert.Equal("", result);
+            Assert.Equal("110264", result);
 
         }
 
