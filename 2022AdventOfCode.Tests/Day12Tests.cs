@@ -27,7 +27,7 @@ abdefghi";
         {
             var d = new Day12(exampleInput);
             var result = await d.Solve_2();
-            Assert.Equal("", result);
+            Assert.Equal("29", result);
 
         }
 
@@ -36,7 +36,7 @@ abdefghi";
         {
             var d = new Day12();
             var result = await d.Solve_1();
-            Assert.Equal("", result);
+            Assert.Equal("497", result);
 
         }
 
@@ -45,7 +45,7 @@ abdefghi";
         {
             var d = new Day12();
             var result = await d.Solve_2();
-            Assert.Equal("", result);
+            Assert.Equal("492", result);
 
         }
     }
