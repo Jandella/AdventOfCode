@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -117,13 +119,18 @@ namespace _2022AdventOfCode
                         {
                             if (cave.Empty(move))
                             {
-                                if (move.X < cave.Rocks.Keys.Min() || move.X > cave.Rocks.Keys.Max())
+                                var maxY = cave.Rocks.SelectMany(x => x.Value).Max();
+                                if (move.X < cave.Rocks.Keys.Min() || move.X > cave.Rocks.Keys.Max() || move.Y > maxY)
                                 {
                                     //reached the abyss!
                                     falling = false;
                                     intoTheAbyss = true;
                                 }
-                                currentGrain = move;
+                                else
+                                {
+                                    currentGrain = move;
+                                }
+
                                 break;
                             }
                         }
@@ -134,14 +141,68 @@ namespace _2022AdventOfCode
                     cave.AddGrainAtRest(currentGrain);
                     countGrains++;
                 }
-                
+
             }
             return new ValueTask<string>(countGrains.ToString());
         }
 
         public override ValueTask<string> Solve_2()
         {
-            throw new NotImplementedException();
+            var cave = new CaveSystem();
+            cave.Rocks = ParseScan();
+            cave.UpdateFloorValue();
+
+            var sandStartingPoint = new Coordinate(500, 0);
+            var dropDown = new Coordinate(0, 1);
+            var dropDiagonalLeft = new Coordinate(-1, 1);
+            var dropDiagonalRight = new Coordinate(1, 1);
+            var moves = new List<Coordinate> { dropDown, dropDiagonalLeft, dropDiagonalRight };
+            bool flowStopped = false;
+            int countGrains = 0;
+            while (!flowStopped)
+            {
+                var currentGrain = new Coordinate(sandStartingPoint.X, sandStartingPoint.Y);
+                bool falling = true;
+                while (falling)
+                {
+                    var possiblePositions = new List<Coordinate>();
+                    foreach (var move in moves) //storing possible moves
+                    {
+                        possiblePositions.Add(new Coordinate(currentGrain.X + move.X, currentGrain.Y + move.Y));
+                    }
+
+                    if (possiblePositions.All(x => !cave.Empty(x)))
+                    {
+                        falling = false;
+                    }
+                    else
+                    {
+                        foreach (var move in possiblePositions)
+                        {
+                            if (cave.Empty(move))
+                            {
+
+                                currentGrain = move;
+
+
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (currentGrain == sandStartingPoint)
+                {
+                    flowStopped = true;
+                }
+
+
+                cave.AddGrainAtRest(currentGrain);
+                countGrains++;
+
+
+            }
+            return new ValueTask<string>(countGrains.ToString());
         }
     }
 
@@ -154,6 +215,7 @@ namespace _2022AdventOfCode
         }
         public Dictionary<int, SortedSet<int>> Rocks { get; set; }
         public Dictionary<int, SortedSet<int>> SandAtRest { get; set; }
+        public int? FloorY { get; set; }
         public void AddGrainAtRest(Coordinate p)
         {
             if (!SandAtRest.ContainsKey(p.X))
@@ -178,10 +240,22 @@ namespace _2022AdventOfCode
                     return false;
                 }
             }
+            if (IsFloor(p))
+            {
+                return false;
+            }
             return true;
         }
-        
 
+        public void UpdateFloorValue()
+        {
+            var maxY = Rocks.SelectMany(x => x.Value).Max();
+            FloorY = maxY + 2;
+        }
+        public bool IsFloor(Coordinate p)
+        {
+            return p.Y == FloorY;
+        }
     }
 
     public class Coordinate
@@ -215,5 +289,8 @@ namespace _2022AdventOfCode
         {
             return $"{X},{Y}";
         }
+
+        public static bool operator ==(Coordinate l, Coordinate r) => l.Equals(r);
+        public static bool operator !=(Coordinate l, Coordinate r) => !(l == r);
     }
 }

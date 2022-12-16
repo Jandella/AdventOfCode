@@ -28,11 +28,21 @@ namespace _2022AdventOfCode.Tests
         }
 
         [Fact]
+        public void TestDay14_Floor()
+        {
+            var d = new Day14(exampleInput);
+            var cave = new CaveSystem();
+            cave.Rocks = d.ParseScan();
+            cave.UpdateFloorValue();
+            Assert.Equal(11, cave.FloorY);
+
+        }
+        [Fact]
         public async Task TestDay14_Solve2()
         {
             var d = new Day14(exampleInput);
             var result = await d.Solve_2();
-            Assert.Equal("", result);
+            Assert.Equal("93", result);
 
         }
 
@@ -41,7 +51,7 @@ namespace _2022AdventOfCode.Tests
         {
             var d = new Day14();
             var result = await d.Solve_1();
-            Assert.Equal("", result);
+            Assert.Equal("592", result);
 
         }
 
@@ -50,7 +60,7 @@ namespace _2022AdventOfCode.Tests
         {
             var d = new Day14();
             var result = await d.Solve_2();
-            Assert.Equal("", result);
+            Assert.Equal("30367", result);
 
         }
     }
