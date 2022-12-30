@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,9 +19,42 @@ namespace _2022AdventOfCode
         {
             _input = input;
         }
+        
         public override ValueTask<string> Solve_1()
         {
-            throw new NotImplementedException();
+            var numberOfRocks = 2022;
+            var falledRocks = new List<RockShape>();
+            var cave = new TallNarrowChamber(_input);
+            var currentHeight = cave.BottomRow;
+            while(falledRocks.Count <= numberOfRocks)
+            {
+                //Each rock appears so that its left edge is two
+                //units away from the left wall and its bottom edge
+                //is three units above the highest rock in the room (or the floor, if there isn't one).
+                var nextRock = cave.GetNextShape(new ShapeCavePoint(currentHeight + 3, 2));
+                bool hasStopped = false;
+                while (!hasStopped)
+                {
+                    var push = cave.GetJetMove();
+                    var tmp = nextRock.MoveLeftRight(push);
+                    if (tmp.IsInCave(cave.Width))
+                    {
+                        nextRock = tmp;
+                    }
+                    tmp = nextRock.MoveDown();
+                    if (!tmp.HasStopped(falledRocks, cave.BottomRow))
+                    {
+                        nextRock = tmp;
+                    }
+                    else
+                    {
+                        hasStopped = true;
+                    }
+                }
+                falledRocks.Add(nextRock);
+                currentHeight = falledRocks.Max(x => x.GetTopPoint()) + 1;
+            }
+            return new ValueTask<string>(currentHeight.ToString());
         }
 
         public override ValueTask<string> Solve_2()
@@ -48,6 +82,7 @@ namespace _2022AdventOfCode
             };
         }
         public int Width { get; } = 7;
+        public int BottomRow { get; } = 0;
         public string Jets { get; set; }
         public RockShape[] FallingOrder { get; set; }
         public int GetJetMove()
@@ -70,6 +105,18 @@ namespace _2022AdventOfCode
 
             return push;
         }
+        public RockShape GetNextShape(ShapeCavePoint p)
+        {
+            if(_fallingShapeIndex >= FallingOrder.Length)
+            {
+                _fallingShapeIndex = 0;
+            }
+            var shape = FallingOrder[_fallingShapeIndex];
+            var nextShape = shape.MoveToStartingPoint(p);
+            _fallingShapeIndex++;
+            return nextShape;
+        }
+        
     }
     public class ShapeCavePoint
     {
@@ -84,6 +131,22 @@ namespace _2022AdventOfCode
         }
         public int Row { get; set; }
         public int Col { get; set; }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is ShapeCavePoint point &&
+                   Row == point.Row &&
+                   Col == point.Col;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Row, Col);
+        }
+        public override string ToString()
+        {
+            return string.Format("({0},{1})", Row, Col);
+        }
     }
     public class RockShape
     {
@@ -121,9 +184,10 @@ namespace _2022AdventOfCode
         {
             var shape = new RockShape();
             shape._shapePoints.Add(new ShapeCavePoint(0, 1));
-            shape._shapePoints.Add(new ShapeCavePoint(0, 1));
-            shape._shapePoints.Add(new ShapeCavePoint(0, 2));
-            shape._shapePoints.Add(new ShapeCavePoint(0, 3));
+            shape._shapePoints.Add(new ShapeCavePoint(1, 1));
+            shape._shapePoints.Add(new ShapeCavePoint(2, 1));
+            shape._shapePoints.Add(new ShapeCavePoint(1, 0));
+            shape._shapePoints.Add(new ShapeCavePoint(1, 2));
             return shape;
         }
         /// <summary>
@@ -141,7 +205,7 @@ namespace _2022AdventOfCode
             shape._shapePoints.Add(new ShapeCavePoint(0, 0));
             shape._shapePoints.Add(new ShapeCavePoint(0, 1));
             shape._shapePoints.Add(new ShapeCavePoint(0, 2));
-            shape._shapePoints.Add(new ShapeCavePoint(0, 3));
+            shape._shapePoints.Add(new ShapeCavePoint(1, 2));
             return shape;
         }
         /// <summary>
@@ -180,6 +244,14 @@ namespace _2022AdventOfCode
             shape._shapePoints.Add(new ShapeCavePoint(1, 1));
             return shape;
         }
+        public int GetHeight()
+        {
+            return _shapePoints.Max(x => x.Row) - _shapePoints.Min(x => x.Row) + 1;
+        }
+        public int GetTopPoint()
+        {
+            return _shapePoints.Max(x => x.Row);
+        }
         /// <summary>
         /// Check if the shape is inside the left and right boundaries
         /// </summary>
@@ -187,17 +259,28 @@ namespace _2022AdventOfCode
         /// <returns></returns>
         public bool IsInCave(int caveSize)
         {
-            return _shapePoints.Any(x => x.Col < 0 || x.Col > caveSize);
+            return !_shapePoints.Any(x => x.Col < 0 || x.Col >= caveSize);
         }
         /// <summary>
         /// Check if the shape has reached the bottom row 
         /// </summary>
         /// <param name="bottomRow"></param>
         /// <returns></returns>
-        public bool HasStopped(int bottomRow)
-        {
-            return _shapePoints.Any(x => x.Row == bottomRow + 1);
+        public bool HasStopped(List<RockShape> falledRocks, int bottomRow)
+        {       
+            for (int i = falledRocks.Count - 1; i >= 0; i--)
+            {
+                var previousRock = falledRocks[i];
+                //check if any of the current shape is touching any of the previous rock shape
+                var intersect = this._shapePoints.Intersect(previousRock._shapePoints);
+                if (intersect.Any())
+                {
+                    return true;
+                }
+            }
+            return _shapePoints.Any(x => x.Row < bottomRow);
         }
+        
         /// <summary>
         /// Move the shape left or right
         /// </summary>
@@ -215,7 +298,7 @@ namespace _2022AdventOfCode
             return res;
         }
         /// <summary>
-        /// Move the current shape down of one go
+        /// Move the current shape down of one step
         /// </summary>
         /// <returns>The shape in the new position</returns>
         public RockShape MoveDown()
@@ -244,6 +327,11 @@ namespace _2022AdventOfCode
             var res = new RockShape();
             res._shapePoints = shapes;
             return res;
+        }
+
+        public override string ToString()
+        {
+            return string.Join(", ", _shapePoints);
         }
 
     }
