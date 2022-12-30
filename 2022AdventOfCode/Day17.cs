@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -19,7 +20,7 @@ namespace _2022AdventOfCode
         {
             _input = input;
         }
-        
+
         public override ValueTask<string> Solve_1()
         {
             var cave = new TallNarrowChamber(_input);
@@ -30,7 +31,10 @@ namespace _2022AdventOfCode
 
         public override ValueTask<string> Solve_2()
         {
-            throw new NotImplementedException();
+            var cave = new TallNarrowChamber(_input);
+            var res = cave.SimulateFalling(1000000000000);
+
+            return new ValueTask<string>(res.Height.ToString());
         }
     }
 
@@ -56,21 +60,21 @@ namespace _2022AdventOfCode
         public int BottomRow { get; } = 0;
         public string Jets { get; set; }
         public RockShape[] FallingOrder { get; set; }
-        public int GetJetMove()
+        public ShapeCavePoint GetJetMove()
         {
             if (_jetIndex >= Jets.Length)
             {
                 _jetIndex = 0;
             }
-            int push = 0;
+            ShapeCavePoint push = new ShapeCavePoint(0, 0);
             var currentChar = Jets[_jetIndex];
             if (currentChar == PushToLeft)
             {
-                push = -1;
+                push.Col = -1;
             }
             else if (currentChar == PushToRight)
             {
-                push = 1;
+                push.Col = 1;
             }
             _jetIndex++;
 
@@ -78,19 +82,21 @@ namespace _2022AdventOfCode
         }
         public RockShape GetNextShape(ShapeCavePoint p)
         {
-            if(_fallingShapeIndex >= FallingOrder.Length)
+            if (_fallingShapeIndex >= FallingOrder.Length)
             {
                 _fallingShapeIndex = 0;
             }
             var shape = FallingOrder[_fallingShapeIndex];
-            var nextShape = shape.MoveToStartingPoint(p);
+            var nextShape = shape.Move(p);
             _fallingShapeIndex++;
             return nextShape;
         }
         public StackResult SimulateFalling(int numberOfRocks)
         {
             var fallenRocks = new HashSet<RockShape>();
+            var rocksPoint = new HashSet<ShapeCavePoint>();
             var currentHeight = BottomRow;
+            var moveDownVector = new ShapeCavePoint(-1, 0);
             while (fallenRocks.Count < numberOfRocks)
             {
                 //Each rock appears so that its left edge is two
@@ -101,28 +107,81 @@ namespace _2022AdventOfCode
                 while (!hasStopped)
                 {
                     var push = GetJetMove();
-                    var tmp = nextRock.MoveLeftRight(push);
-                    if (tmp.IsInCave(fallenRocks, Width))
+                    var tmp = nextRock.Move(push);
+                    if (tmp.IsInCave(rocksPoint, Width))
                     {
                         nextRock = tmp;
                     }
-                    tmp = nextRock.MoveDown();
-                    if (!tmp.HasStopped(fallenRocks, BottomRow))
+                    //Debug.WriteLine(PrintStatus(fallenRocks, currentHeight + nextRock.GetTopPoint(), nextRock));
+                    tmp = nextRock.Move(moveDownVector);
+                    if (!tmp.HasStopped(rocksPoint, BottomRow))
                     {
                         nextRock = tmp;
+                        //Debug.WriteLine(PrintStatus(fallenRocks, currentHeight + nextRock.GetTopPoint(), nextRock));
                     }
                     else
                     {
                         hasStopped = true;
                     }
                 }
-                fallenRocks.Add(nextRock);
+                if (!fallenRocks.Add(nextRock))
+                {
+                    throw new InvalidOperationException("Shape not added");
+                }
+                var allPoints = nextRock.GetAllPoints();
+                foreach (var item in allPoints)
+                {
+                    rocksPoint.Add(item);
+                }
                 currentHeight = fallenRocks.Max(x => x.GetTopPoint()) + 1;
             }
             return new StackResult(Width, currentHeight)
             {
                 FallenRocks = fallenRocks
             };
+        }
+
+        public string PrintStatus(HashSet<RockShape> fallenRocks, int heigth, RockShape? current)
+        {
+            var rows = new List<string>();
+            var firstLine = "    ";
+            firstLine += "+";
+            for (int i = 0; i < Width; i++)
+            {
+                firstLine += "-";
+            }
+            firstLine += "+";
+            rows.Add(firstLine);
+            for (int i = BottomRow; i < heigth + 1; i++)
+            {
+                var line = string.Format("{0:D3} ", i);
+
+                for (int j = -1; j <= Width; j++)
+                {
+                    var point = new ShapeCavePoint(i, j);
+                    if (j == -1 || j == Width)
+                    {
+                        line += "|";
+                    }
+                    else if (fallenRocks.Any(r => r.ContainsPoint(point)))
+                    {
+                        line += "#";
+                    }
+                    else if (current != null && current.ContainsPoint(point))
+                    {
+                        line += "@";
+                    }
+                    else
+                    {
+                        line += ".";
+                    }
+                }
+
+                rows.Add(line);
+            }
+            rows.Reverse();
+            var header = string.Format("Tower Height = {0}, fallen rocks = {1}", heigth, fallenRocks.Count);
+            return header + Environment.NewLine + string.Join(Environment.NewLine, rows);
         }
     }
     public class ShapeCavePoint
@@ -131,14 +190,18 @@ namespace _2022AdventOfCode
         {
 
         }
-        public ShapeCavePoint(int r, int c)
+        public ShapeCavePoint(long r, int c)
         {
             Row = r;
             Col = c;
         }
-        public int Row { get; set; }
+        public long Row { get; set; }
         public int Col { get; set; }
 
+        public ShapeCavePoint Sum(ShapeCavePoint other)
+        {
+            return new ShapeCavePoint(Row + other.Row, Col + other.Col);
+        }
         public override bool Equals(object? obj)
         {
             return obj is ShapeCavePoint point &&
@@ -213,7 +276,7 @@ namespace _2022AdventOfCode
             shape._shapePoints.Add(new ShapeCavePoint(0, 1));
             shape._shapePoints.Add(new ShapeCavePoint(0, 2));
             shape._shapePoints.Add(new ShapeCavePoint(1, 2));
-            shape._shapePoints.Add(new ShapeCavePoint(1, 3));
+            shape._shapePoints.Add(new ShapeCavePoint(2, 2));
             return shape;
         }
         /// <summary>
@@ -252,34 +315,41 @@ namespace _2022AdventOfCode
             shape._shapePoints.Add(new ShapeCavePoint(1, 1));
             return shape;
         }
-        public int GetHeight()
+        public long GetHeight()
         {
             return _shapePoints.Max(x => x.Row) - _shapePoints.Min(x => x.Row) + 1;
         }
-        public int GetTopPoint()
+        public long GetTopPoint()
         {
             return _shapePoints.Max(x => x.Row);
+        }
+        public HashSet<ShapeCavePoint> GetAllPoints()
+        {
+            var res = new HashSet<ShapeCavePoint>();
+            foreach (var item in _shapePoints)
+            {
+                res.Add(new ShapeCavePoint(item.Row, item.Col));
+            }
+            return _shapePoints;
         }
         /// <summary>
         /// Check if the shape is inside the left and right boundaries
         /// </summary>
         /// <param name="caveSize"></param>
         /// <returns></returns>
-        public bool IsInCave(HashSet<RockShape> fallenRocks, int caveSize)
+        public bool IsInCave(HashSet<ShapeCavePoint> fallenRocks, int caveSize)
         {
             var inCave = !_shapePoints.Any(x => x.Col < 0 || x.Col >= caveSize);
             if (inCave)
             {
-                return inCave;
-            }
-            for (int i = fallenRocks.Count - 1; i >= 0; i--)
-            {
-                var previousRock = fallenRocks.ElementAt(i);
-                //check if any of the current shape is touching any of the previous rock shape
-                var intersect = this._shapePoints.Intersect(previousRock._shapePoints);
-                if (intersect.Any())
+                //is in cave, check if overlaps other shapes
+                if (fallenRocks.Any())
                 {
-                    return false;
+                    var intersect = this._shapePoints.Intersect(fallenRocks);
+                    if (intersect.Any())
+                    {
+                        return false;
+                    }
                 }
             }
             return inCave;
@@ -289,13 +359,11 @@ namespace _2022AdventOfCode
         /// </summary>
         /// <param name="bottomRow"></param>
         /// <returns></returns>
-        public bool HasStopped(HashSet<RockShape> falledRocks, int bottomRow)
-        {       
-            for (int i = falledRocks.Count - 1; i >= 0; i--)
+        public bool HasStopped(HashSet<ShapeCavePoint> falledRocks, int bottomRow)
+        {
+            if (falledRocks.Any())
             {
-                var previousRock = falledRocks.ElementAt(i);
-                //check if any of the current shape is touching any of the previous rock shape
-                var intersect = this._shapePoints.Intersect(previousRock._shapePoints);
+                var intersect = this._shapePoints.Intersect(falledRocks);
                 if (intersect.Any())
                 {
                     return true;
@@ -303,60 +371,38 @@ namespace _2022AdventOfCode
             }
             return _shapePoints.Any(x => x.Row < bottomRow);
         }
-        
-        /// <summary>
-        /// Move the shape left or right
-        /// </summary>
-        /// <param name="push"></param>
-        /// <returns>The shape in the new position</returns>
-        public RockShape MoveLeftRight(int push)
+
+        public RockShape Move(ShapeCavePoint p)
         {
             var shapes = new HashSet<ShapeCavePoint>();
             foreach (var item in _shapePoints)
             {
-                shapes.Add(new ShapeCavePoint(item.Row, item.Col + push));
-            }
-            var res = new RockShape();
-            res._shapePoints = shapes;
-            return res;
-        }
-        /// <summary>
-        /// Move the current shape down of one step
-        /// </summary>
-        /// <returns>The shape in the new position</returns>
-        public RockShape MoveDown()
-        {
-            var shapes = new HashSet<ShapeCavePoint>();
-            foreach (var item in _shapePoints)
-            {
-                shapes.Add(new ShapeCavePoint(item.Row - 1, item.Col));
-            }
-            var res = new RockShape();
-            res._shapePoints = shapes;
-            return res;
-        }
-        /// <summary>
-        /// move the shape to the current starting point p
-        /// </summary>
-        /// <param name="p"></param>
-        /// <returns></returns>
-        public RockShape MoveToStartingPoint(ShapeCavePoint p)
-        {
-            var shapes = new HashSet<ShapeCavePoint>();
-            foreach (var item in _shapePoints)
-            {
-                shapes.Add(new ShapeCavePoint(item.Row + p.Row, item.Col + p.Col));
+                shapes.Add(item.Sum(p));
             }
             var res = new RockShape();
             res._shapePoints = shapes;
             return res;
         }
 
+        public bool ContainsPoint(ShapeCavePoint p)
+        {
+            return _shapePoints.Contains(p);
+        }
         public override string ToString()
         {
             return string.Join(", ", _shapePoints);
         }
 
+        public override bool Equals(object? obj)
+        {
+            return obj is RockShape shape &&
+                   EqualityComparer<HashSet<ShapeCavePoint>>.Default.Equals(_shapePoints, shape._shapePoints);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(_shapePoints);
+        }
     }
 
     public class StackResult
@@ -367,7 +413,7 @@ namespace _2022AdventOfCode
             Height = h;
         }
         public int Width { get; set; }
-        public int Height { get; set; }
+        public long Height { get; set; }
         public HashSet<RockShape> FallenRocks { get; set; } = new HashSet<RockShape>();
     }
 }
