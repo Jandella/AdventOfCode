@@ -22,39 +22,10 @@ namespace _2022AdventOfCode
         
         public override ValueTask<string> Solve_1()
         {
-            var numberOfRocks = 2022;
-            var falledRocks = new List<RockShape>();
             var cave = new TallNarrowChamber(_input);
-            var currentHeight = cave.BottomRow;
-            while(falledRocks.Count < numberOfRocks)
-            {
-                //Each rock appears so that its left edge is two
-                //units away from the left wall and its bottom edge
-                //is three units above the highest rock in the room (or the floor, if there isn't one).
-                var nextRock = cave.GetNextShape(new ShapeCavePoint(currentHeight + 3, 2));
-                bool hasStopped = false;
-                while (!hasStopped)
-                {
-                    var push = cave.GetJetMove();
-                    var tmp = nextRock.MoveLeftRight(push);
-                    if (tmp.IsInCave(cave.Width))
-                    {
-                        nextRock = tmp;
-                    }
-                    tmp = nextRock.MoveDown();
-                    if (!tmp.HasStopped(falledRocks, cave.BottomRow))
-                    {
-                        nextRock = tmp;
-                    }
-                    else
-                    {
-                        hasStopped = true;
-                    }
-                }
-                falledRocks.Add(nextRock);
-                currentHeight = falledRocks.Max(x => x.GetTopPoint()) + 1;
-            }
-            return new ValueTask<string>(currentHeight.ToString());
+            var res = cave.SimulateFalling(2022);
+
+            return new ValueTask<string>(res.Height.ToString());
         }
 
         public override ValueTask<string> Solve_2()
@@ -116,7 +87,43 @@ namespace _2022AdventOfCode
             _fallingShapeIndex++;
             return nextShape;
         }
-        
+        public StackResult SimulateFalling(int numberOfRocks)
+        {
+            var fallenRocks = new HashSet<RockShape>();
+            var currentHeight = BottomRow;
+            while (fallenRocks.Count < numberOfRocks)
+            {
+                //Each rock appears so that its left edge is two
+                //units away from the left wall and its bottom edge
+                //is three units above the highest rock in the room (or the floor, if there isn't one).
+                var nextRock = GetNextShape(new ShapeCavePoint(currentHeight + 3, 2));
+                bool hasStopped = false;
+                while (!hasStopped)
+                {
+                    var push = GetJetMove();
+                    var tmp = nextRock.MoveLeftRight(push);
+                    if (tmp.IsInCave(fallenRocks, Width))
+                    {
+                        nextRock = tmp;
+                    }
+                    tmp = nextRock.MoveDown();
+                    if (!tmp.HasStopped(fallenRocks, BottomRow))
+                    {
+                        nextRock = tmp;
+                    }
+                    else
+                    {
+                        hasStopped = true;
+                    }
+                }
+                fallenRocks.Add(nextRock);
+                currentHeight = fallenRocks.Max(x => x.GetTopPoint()) + 1;
+            }
+            return new StackResult(Width, currentHeight)
+            {
+                FallenRocks = fallenRocks
+            };
+        }
     }
     public class ShapeCavePoint
     {
@@ -258,20 +265,35 @@ namespace _2022AdventOfCode
         /// </summary>
         /// <param name="caveSize"></param>
         /// <returns></returns>
-        public bool IsInCave(int caveSize)
+        public bool IsInCave(HashSet<RockShape> fallenRocks, int caveSize)
         {
-            return !_shapePoints.Any(x => x.Col < 0 || x.Col >= caveSize);
+            var inCave = !_shapePoints.Any(x => x.Col < 0 || x.Col >= caveSize);
+            if (inCave)
+            {
+                return inCave;
+            }
+            for (int i = fallenRocks.Count - 1; i >= 0; i--)
+            {
+                var previousRock = fallenRocks.ElementAt(i);
+                //check if any of the current shape is touching any of the previous rock shape
+                var intersect = this._shapePoints.Intersect(previousRock._shapePoints);
+                if (intersect.Any())
+                {
+                    return false;
+                }
+            }
+            return inCave;
         }
         /// <summary>
         /// Check if the shape has reached the bottom row 
         /// </summary>
         /// <param name="bottomRow"></param>
         /// <returns></returns>
-        public bool HasStopped(List<RockShape> falledRocks, int bottomRow)
+        public bool HasStopped(HashSet<RockShape> falledRocks, int bottomRow)
         {       
             for (int i = falledRocks.Count - 1; i >= 0; i--)
             {
-                var previousRock = falledRocks[i];
+                var previousRock = falledRocks.ElementAt(i);
                 //check if any of the current shape is touching any of the previous rock shape
                 var intersect = this._shapePoints.Intersect(previousRock._shapePoints);
                 if (intersect.Any())
@@ -335,5 +357,17 @@ namespace _2022AdventOfCode
             return string.Join(", ", _shapePoints);
         }
 
+    }
+
+    public class StackResult
+    {
+        public StackResult(int w, int h)
+        {
+            Width = w;
+            Height = h;
+        }
+        public int Width { get; set; }
+        public int Height { get; set; }
+        public HashSet<RockShape> FallenRocks { get; set; } = new HashSet<RockShape>();
     }
 }
