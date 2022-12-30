@@ -26,7 +26,7 @@ namespace _2022AdventOfCode
             var falledRocks = new List<RockShape>();
             var cave = new TallNarrowChamber(_input);
             var currentHeight = cave.BottomRow;
-            while(falledRocks.Count <= numberOfRocks)
+            while(falledRocks.Count < numberOfRocks)
             {
                 //Each rock appears so that its left edge is two
                 //units away from the left wall and its bottom edge
@@ -206,6 +206,7 @@ namespace _2022AdventOfCode
             shape._shapePoints.Add(new ShapeCavePoint(0, 1));
             shape._shapePoints.Add(new ShapeCavePoint(0, 2));
             shape._shapePoints.Add(new ShapeCavePoint(1, 2));
+            shape._shapePoints.Add(new ShapeCavePoint(1, 3));
             return shape;
         }
         /// <summary>
