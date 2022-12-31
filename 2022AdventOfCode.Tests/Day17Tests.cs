@@ -58,6 +58,50 @@ namespace _2022AdventOfCode.Tests
         }
 
         [Fact]
+        public void TestDay17_PrintHorizontalBarShape()
+        {
+            var r = RockShape.GenerateHorizontalBarShape();
+            var res = r.PrintShape();
+            Assert.Equal("####", res);
+        }
+        [Fact]
+        public void TestDay17_PrintPlusBarShape()
+        {
+            var r = RockShape.GeneratePlusBarShape();
+            var res = r.PrintShape();
+            Assert.Equal(@".#.
+###
+.#.", res);
+        }
+        [Fact]
+        public void TestDay17_PrintReverseLShape()
+        {
+            var r = RockShape.GenerateReverseLShape();
+            var res = r.PrintShape();
+            Assert.Equal(@"..#
+..#
+###", res);
+        }
+        [Fact]
+        public void TestDay17_PrintVerticalBarShape()
+        {
+            var r = RockShape.GenerateVerticalBarShape();
+            var res = r.PrintShape();
+            Assert.Equal(@"#
+#
+#
+#", res);
+        }
+        [Fact]
+        public void TestDay17_PrintSquareShape()
+        {
+            var r = RockShape.GenerateSquareShape();
+            var res = r.PrintShape();
+            Assert.Equal(@"##
+##", res);
+        }
+
+        [Fact]
         public async Task TestDay17_Solve2()
         {
             var d = new Day17(exampleInput);

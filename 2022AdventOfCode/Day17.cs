@@ -32,7 +32,7 @@ namespace _2022AdventOfCode
         public override ValueTask<string> Solve_2()
         {
             var cave = new TallNarrowChamber(_input);
-            var res = cave.SimulateFalling(1000000000000);
+            var res = cave.SimulateLargeFalling(1000000000000);
 
             return new ValueTask<string>(res.Height.ToString());
         }
@@ -91,7 +91,7 @@ namespace _2022AdventOfCode
             _fallingShapeIndex++;
             return nextShape;
         }
-        public StackResult SimulateFalling(long numberOfRocks)
+        public StackResult SimulateFalling(int numberOfRocks)
         {
             var fallenRocks = new HashSet<RockShape>();
             var rocksPoint = new HashSet<ShapeCavePoint>();
@@ -142,11 +142,11 @@ namespace _2022AdventOfCode
         }
 
 
-        public StackResult SimulateFalling(StackResult startingState, long numberOfRocks)
+        public StackResult SimulateLargeFalling(long numberOfRocks)
         {
-            var fallenRocks = startingState.FallenRocks;
-            var rocksPoint = startingState.FallenRocks.SelectMany(x => x.GetAllPoints()).ToHashSet();
-            long currentHeight = startingState.Height;
+            var fallenRocks = new HashSet<RockShape>();
+            var rocksPoint = new HashSet<ShapeCavePoint>();
+            long currentHeight = BottomRow;
             var moveDownVector = new ShapeCavePoint(-1, 0);
             while (fallenRocks.LongCount() < numberOfRocks)
             {
@@ -453,6 +453,37 @@ namespace _2022AdventOfCode
         {
             return HashCode.Combine(_shapePoints);
         }
+        /// <summary>
+        /// Graphic representation of shape in a string 
+        /// </summary>
+        /// <returns></returns>
+        public string PrintShape()
+        {
+            var minRow = _shapePoints.Min(x => x.Row);
+            var maxRow = _shapePoints.Max(x => x.Row);
+            var minCol = _shapePoints.Min(x => x.Col);
+            var maxCol = _shapePoints.Max(x => x.Col);
+            var rows = new List<string>();
+            for (long i = minRow; i <= maxRow; i++)
+            {
+                var line = "";
+                for (int j = minCol; j <= maxCol; j++)
+                {
+                    var item = _shapePoints.FirstOrDefault(x => x.Equals((new ShapeCavePoint(i, j))));
+                    if(item == null)
+                    {
+                        line += ".";
+                    }
+                    else
+                    {
+                        line += "#";
+                    }
+                }
+                rows.Add(line);
+            }
+            rows.Reverse();
+            return string.Join(Environment.NewLine, rows);
+        }
     }
 
     public class StackResult
@@ -465,5 +496,25 @@ namespace _2022AdventOfCode
         public int Width { get; set; }
         public long Height { get; set; }
         public HashSet<RockShape> FallenRocks { get; set; } = new HashSet<RockShape>();
+    }
+
+    public class RockTowerState
+    {
+        public int IndexOfJet { get; set; }
+        public int IndexOfRocks { get; set; }
+        public HashSet<string> LastFallenRockShapes { get; set; } = new HashSet<string>();
+
+        public override bool Equals(object? obj)
+        {
+            return obj is RockTowerState state &&
+                   IndexOfJet == state.IndexOfJet &&
+                   IndexOfRocks == state.IndexOfRocks &&
+                   EqualityComparer<HashSet<string>>.Default.Equals(LastFallenRockShapes, state.LastFallenRockShapes);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(IndexOfJet, IndexOfRocks, LastFallenRockShapes);
+        }
     }
 }
