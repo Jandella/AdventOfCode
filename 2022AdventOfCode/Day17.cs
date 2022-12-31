@@ -9,6 +9,11 @@ using System.Threading.Tasks;
 
 namespace _2022AdventOfCode
 {
+    /// <summary>
+    /// Many thanks for https://aoc.just2good.co.uk/2022/17 for the great explanation of day 17, 
+    /// witch helped me debug my part 1 and explained well how to takle part 2. 
+    /// The code used was python and not C#, but was helpfull neverless
+    /// </summary>
     public class Day17 : AoCHelper.BaseDay
     {
         private string _input;
@@ -141,54 +146,107 @@ namespace _2022AdventOfCode
             };
         }
 
-
-        public StackResult SimulateLargeFalling(long numberOfRocks)
+        public RockShape DropRock(long currentHeight, HashSet<ShapeCavePoint> rocksPoint)
         {
-            var fallenRocks = new HashSet<RockShape>();
-            var rocksPoint = new HashSet<ShapeCavePoint>();
-            long currentHeight = BottomRow;
             var moveDownVector = new ShapeCavePoint(-1, 0);
-            while (fallenRocks.LongCount() < numberOfRocks)
+            //Each rock appears so that its left edge is two
+            //units away from the left wall and its bottom edge
+            //is three units above the highest rock in the room (or the floor, if there isn't one).
+            var nextRock = GetNextShape(new ShapeCavePoint(currentHeight + 3, 2));
+            bool hasStopped = false;
+            while (!hasStopped)
             {
-                //Each rock appears so that its left edge is two
-                //units away from the left wall and its bottom edge
-                //is three units above the highest rock in the room (or the floor, if there isn't one).
-                var nextRock = GetNextShape(new ShapeCavePoint(currentHeight + 3, 2));
-                bool hasStopped = false;
-                while (!hasStopped)
+                var push = GetJetMove();
+                var tmp = nextRock.Move(push);
+                if (tmp.IsInCave(rocksPoint, Width))
                 {
-                    var push = GetJetMove();
-                    var tmp = nextRock.Move(push);
-                    if (tmp.IsInCave(rocksPoint, Width))
-                    {
-                        nextRock = tmp;
-                    }
-                    //Debug.WriteLine(PrintStatus(fallenRocks, currentHeight + nextRock.GetTopPoint(), nextRock));
-                    tmp = nextRock.Move(moveDownVector);
-                    if (!tmp.HasStopped(rocksPoint, BottomRow))
-                    {
-                        nextRock = tmp;
-                        //Debug.WriteLine(PrintStatus(fallenRocks, currentHeight + nextRock.GetTopPoint(), nextRock));
-                    }
-                    else
-                    {
-                        hasStopped = true;
-                    }
+                    nextRock = tmp;
                 }
-                if (!fallenRocks.Add(nextRock))
+                tmp = nextRock.Move(moveDownVector);
+                if (!tmp.HasStopped(rocksPoint, BottomRow))
                 {
-                    throw new InvalidOperationException("Shape not added");
+                    nextRock = tmp;
                 }
+                else
+                {
+                    hasStopped = true;
+                }
+            }
+            return nextRock;
+        }
+
+        public StackResultBase SimulateLargeFalling(long numberOfFallenRocks)
+        {
+            int bufferSize = 1000;//arbitrary
+            var lastFallenRocksBuffer = new Queue<RockShape>(bufferSize);
+            var rocksPoint = new HashSet<ShapeCavePoint>();
+            var stateCache = new Dictionary<RockTowerState, StackResultBase>();
+            long currentHeight = BottomRow;
+            long fallenRocksNumber = 0;
+            bool repetitionFound = false;
+            long repetitionOfFallenRockHeight = 0;
+            long repetitionOfFallenRockCount = 0;
+            while (!repetitionFound || fallenRocksNumber < numberOfFallenRocks)
+            {
+                var nextRock = DropRock(currentHeight, rocksPoint);
                 var allPoints = nextRock.GetAllPoints();
                 foreach (var item in allPoints)
                 {
                     rocksPoint.Add(item);
                 }
-                currentHeight = fallenRocks.Max(x => x.GetTopPoint()) + 1;
+                lastFallenRocksBuffer.Enqueue(nextRock);
+                while(lastFallenRocksBuffer.Count > bufferSize)
+                {
+                    lastFallenRocksBuffer.Dequeue();
+                }
+                currentHeight = lastFallenRocksBuffer.Max(x => x.GetTopPoint()) + 1;
+                numberOfFallenRocks++;
+                var currentState = new RockTowerState()
+                {
+                    IndexOfJet = _jetIndex,
+                    IndexOfRocks = _fallingShapeIndex,
+                    LastFallenRockShapes = new HashSet<string>()
+                };
+                //taking last 20 rocks
+                for (int i = lastFallenRocksBuffer.Count; i <= 20; i++)
+                {
+                    var item = lastFallenRocksBuffer.ElementAtOrDefault(i);
+                    if(item != null)
+                    {
+                        currentState.LastFallenRockShapes.Add(item.PrintShape());
+                    }
+                }
+                //checking cache for repetition
+                if (!repetitionFound)
+                {
+                    if (stateCache.ContainsKey(currentState))
+                    {
+                        //repeat found!
+                        repetitionFound = true;
+                        repetitionOfFallenRockCount = numberOfFallenRocks - stateCache[currentState].NumberOfFallenRocks;
+                        repetitionOfFallenRockHeight = currentHeight - stateCache[currentState].Height;
+                    }
+                    else
+                    {
+                        //storing state in cache
+                        stateCache.Add(currentState, new StackResultBase(Width, currentHeight)
+                        {
+                            NumberOfFallenRocks = numberOfFallenRocks
+                        });
+                    }
+                }
+                
             }
-            return new StackResult(Width, currentHeight)
+
+            //repetition found, calculating height
+
+
+            //remaining
+            
+
+            return new StackResultBase(Width, currentHeight)
             {
-                FallenRocks = fallenRocks
+                NumberOfFallenRocks = numberOfFallenRocks
             };
         }
         public string PrintStatus(HashSet<RockShape> fallenRocks, long heigth, RockShape? current)
@@ -485,16 +543,28 @@ namespace _2022AdventOfCode
             return string.Join(Environment.NewLine, rows);
         }
     }
-
-    public class StackResult
+    public class StackResultBase
     {
-        public StackResult(int w, long h)
+        public StackResultBase(int w, long h)
         {
             Width = w;
             Height = h;
         }
         public int Width { get; set; }
         public long Height { get; set; }
+        public long NumberOfFallenRocks { get; set; }
+    }
+
+    public class StackResult : StackResultBase
+    {
+        public StackResult(int w, long h) : base(w, h)
+        {
+
+        }
+        public new long NumberOfFallenRocks { 
+            get => FallenRocks.LongCount();
+            set => _ = value;
+        }
         public HashSet<RockShape> FallenRocks { get; set; } = new HashSet<RockShape>();
     }
 
