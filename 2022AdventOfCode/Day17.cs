@@ -174,46 +174,60 @@ namespace _2022AdventOfCode
             }
             return nextRock;
         }
-
-        public StackResultBase SimulateLargeFalling(long numberOfFallenRocks)
+        /// <summary>
+        /// Simulate a large fall, using buffers for set comparing optimization
+        /// </summary>
+        /// <param name="rocksToDrop"></param>
+        /// <returns></returns>
+        public StackResultBase SimulateLargeFalling(long rocksToDrop)
         {
-            int bufferSize = 1000;//arbitrary
+            int bufferSize = 200;//arbitrary
+            //Storing only last {bufferSize} point and shapes to keep operation faster
             var lastFallenRocksBuffer = new Queue<RockShape>(bufferSize);
-            var rocksPoint = new HashSet<ShapeCavePoint>();
+            var rocksPointBuffer = new PointBufferQueue(bufferSize);
+            
             var stateCache = new Dictionary<RockTowerState, StackResultBase>();
             long currentHeight = BottomRow;
             long fallenRocksNumber = 0;
             bool repetitionFound = false;
             long repetitionOfFallenRockHeight = 0;
             long repetitionOfFallenRockCount = 0;
-            while (!repetitionFound || fallenRocksNumber < numberOfFallenRocks)
+            while (!repetitionFound && fallenRocksNumber < rocksToDrop)
             {
-                var nextRock = DropRock(currentHeight, rocksPoint);
-                var allPoints = nextRock.GetAllPoints();
-                foreach (var item in allPoints)
-                {
-                    rocksPoint.Add(item);
-                }
+                var nextRock = DropRock(currentHeight, rocksPointBuffer.GetCurrentSet());
+                rocksPointBuffer.Add(nextRock);
+                
                 lastFallenRocksBuffer.Enqueue(nextRock);
-                while(lastFallenRocksBuffer.Count > bufferSize)
+                while (lastFallenRocksBuffer.Count > bufferSize)
                 {
                     lastFallenRocksBuffer.Dequeue();
                 }
+                
                 currentHeight = lastFallenRocksBuffer.Max(x => x.GetTopPoint()) + 1;
-                numberOfFallenRocks++;
+                fallenRocksNumber++;
                 var currentState = new RockTowerState()
                 {
                     IndexOfJet = _jetIndex,
                     IndexOfRocks = _fallingShapeIndex,
-                    LastFallenRockShapes = new HashSet<string>()
+                    LastFallenRockShapes = string.Empty
                 };
                 //taking last 20 rocks
-                for (int i = lastFallenRocksBuffer.Count; i <= 20; i++)
+                var rocksTaken = 0;
+                for (int i = lastFallenRocksBuffer.Count - 1; i >= 0; i--)
                 {
                     var item = lastFallenRocksBuffer.ElementAtOrDefault(i);
-                    if(item != null)
+                    if (item != null)
                     {
-                        currentState.LastFallenRockShapes.Add(item.PrintShape());
+                        if(currentState.LastFallenRockShapes != string.Empty)
+                        {
+                            currentState.LastFallenRockShapes += Environment.NewLine;
+                        }
+                        currentState.LastFallenRockShapes+= item.PrintShape();
+                        rocksTaken++;
+                    }
+                    if(rocksTaken >= 20)
+                    {
+                        break;
                     }
                 }
                 //checking cache for repetition
@@ -223,7 +237,7 @@ namespace _2022AdventOfCode
                     {
                         //repeat found!
                         repetitionFound = true;
-                        repetitionOfFallenRockCount = numberOfFallenRocks - stateCache[currentState].NumberOfFallenRocks;
+                        repetitionOfFallenRockCount = fallenRocksNumber - stateCache[currentState].NumberOfFallenRocks;
                         repetitionOfFallenRockHeight = currentHeight - stateCache[currentState].Height;
                     }
                     else
@@ -231,22 +245,54 @@ namespace _2022AdventOfCode
                         //storing state in cache
                         stateCache.Add(currentState, new StackResultBase(Width, currentHeight)
                         {
-                            NumberOfFallenRocks = numberOfFallenRocks
+                            NumberOfFallenRocks = fallenRocksNumber
                         });
                     }
                 }
-                
+
             }
 
             //repetition found, calculating height
+            var remainingDrop = rocksToDrop - fallenRocksNumber;
+            long repeatsRequired = 0;
+            long heightRepeatFound = currentHeight;
+            long numberOfFallenRockCountRepeatFound = fallenRocksNumber;
+            var newHeight = currentHeight;
+            var newNumberOfFallenRockCount = fallenRocksNumber;
+            if (repetitionFound)
+            {
+                repeatsRequired = (long)Math.Floor(((double)remainingDrop / (double)repetitionOfFallenRockCount));
+                remainingDrop %= repetitionOfFallenRockCount;
+                var heightDelta = repetitionOfFallenRockHeight * repeatsRequired;
+                newHeight = currentHeight + heightDelta;
+                newNumberOfFallenRockCount += repetitionOfFallenRockCount * repeatsRequired;
+            }
 
 
             //remaining
-            
-
-            return new StackResultBase(Width, currentHeight)
+            //drop shapes again with buffer (we continue from the last dropped shapes,
+            //we have the old height and have a buffer where we got a repetition)
+            while (remainingDrop > 0)
             {
-                NumberOfFallenRocks = numberOfFallenRocks
+                var nextRock = DropRock(currentHeight, rocksPointBuffer.GetCurrentSet());
+                rocksPointBuffer.Add(nextRock);
+                
+                lastFallenRocksBuffer.Enqueue(nextRock);
+                while (lastFallenRocksBuffer.Count > bufferSize)
+                {
+                    lastFallenRocksBuffer.Dequeue();
+                }
+                currentHeight = lastFallenRocksBuffer.Max(x => x.GetTopPoint()) + 1;
+                remainingDrop--;
+                fallenRocksNumber++;
+            }
+            var finalHeight = newHeight + currentHeight - heightRepeatFound;
+
+
+
+            return new StackResultBase(Width, finalHeight)
+            {
+                NumberOfFallenRocks = newNumberOfFallenRockCount + fallenRocksNumber - numberOfFallenRockCountRepeatFound
             };
         }
         public string PrintStatus(HashSet<RockShape> fallenRocks, long heigth, RockShape? current)
@@ -528,7 +574,7 @@ namespace _2022AdventOfCode
                 for (int j = minCol; j <= maxCol; j++)
                 {
                     var item = _shapePoints.FirstOrDefault(x => x.Equals((new ShapeCavePoint(i, j))));
-                    if(item == null)
+                    if (item == null)
                     {
                         line += ".";
                     }
@@ -561,7 +607,8 @@ namespace _2022AdventOfCode
         {
 
         }
-        public new long NumberOfFallenRocks { 
+        public new long NumberOfFallenRocks
+        {
             get => FallenRocks.LongCount();
             set => _ = value;
         }
@@ -572,19 +619,77 @@ namespace _2022AdventOfCode
     {
         public int IndexOfJet { get; set; }
         public int IndexOfRocks { get; set; }
-        public HashSet<string> LastFallenRockShapes { get; set; } = new HashSet<string>();
+        public string LastFallenRockShapes { get; set; } = string.Empty;
 
         public override bool Equals(object? obj)
         {
             return obj is RockTowerState state &&
                    IndexOfJet == state.IndexOfJet &&
                    IndexOfRocks == state.IndexOfRocks &&
-                   EqualityComparer<HashSet<string>>.Default.Equals(LastFallenRockShapes, state.LastFallenRockShapes);
+                   LastFallenRockShapes == state.LastFallenRockShapes;
         }
 
         public override int GetHashCode()
         {
             return HashCode.Combine(IndexOfJet, IndexOfRocks, LastFallenRockShapes);
         }
+    }
+    /// <summary>
+    /// A buffer for storing the current set of points
+    /// </summary>
+    public class PointBufferQueue
+    {
+        private int _bufferSize = 0;
+        private HashSet<ShapeCavePoint> _rocksPoint;
+        private Queue<ShapeCavePoint> _lastRocksPointBuffer;
+        public PointBufferQueue(int bufferSize)
+        {
+            _bufferSize = bufferSize;
+            _rocksPoint = new HashSet<ShapeCavePoint>();
+            _lastRocksPointBuffer = new Queue<ShapeCavePoint>();
+        }
+        /// <summary>
+        /// Add a point to the buffer, if buffer becames full, 
+        /// remove first buffered element
+        /// </summary>
+        /// <param name="p"></param>
+        public void Add(ShapeCavePoint p)
+        {
+            if (_rocksPoint.Add(p))
+            {
+                _lastRocksPointBuffer.Enqueue(p);
+            }
+            while (_lastRocksPointBuffer.Count > _bufferSize)
+            {
+                var item = _lastRocksPointBuffer.Dequeue();
+                _rocksPoint.Remove(item);
+            }
+        }
+        /// <summary>
+        /// Add all the points of a shape.
+        /// </summary>
+        /// <param name="r"></param>
+        public void Add(RockShape r)
+        {
+            var allPoints = r.GetAllPoints();
+            foreach (var p in allPoints)
+            {
+                Add(p);
+            }
+        }
+        /// <summary>
+        /// Return a copy of the current set
+        /// </summary>
+        /// <returns></returns>
+        public HashSet<ShapeCavePoint> GetCurrentSet()
+        {
+            var set = new HashSet<ShapeCavePoint>();
+            foreach (var item in _rocksPoint)
+            {
+                set.Add(new ShapeCavePoint(item.Row, item.Col));
+            }
+            return set;
+        }
+
     }
 }

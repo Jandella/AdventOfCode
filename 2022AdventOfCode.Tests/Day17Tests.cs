@@ -124,7 +124,7 @@ namespace _2022AdventOfCode.Tests
         {
             var d = new Day17();
             var result = await d.Solve_2();
-            Assert.Equal("", result);
+            Assert.Equal("1591977077342", result);
 
         }
     }
